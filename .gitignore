@@ -1,0 +1,15 @@
+# Add any directories, files, or patterns you don't want to be tracked by version control
+CMakeFiles/
+*.o
+*.tmp
+*swp
+CMakeCache.txt
+*.so
+*.dll
+Makefile
+*.sh
+*.cmake
+build
+tags
+.gdb_history
+install_manifest.txt
