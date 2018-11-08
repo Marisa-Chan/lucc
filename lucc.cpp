@@ -40,6 +40,9 @@
 #define ERR_UNKNOWN_CMD   5
 #define ERR_LIBUNR_INIT   6
 
+// Working directory
+char wd[4096];
+
 // Command handler function
 typedef int(*CommandHandler)(int, char**);
 
@@ -62,6 +65,8 @@ void PrintHelpAndExit()
   printf("\tlucc batchsoundexport\n");
   printf("\tlucc batchmusicexport\n");
   printf("\tlucc batchtextureexport\n");
+
+  exit( ERR_BAD_ARGS );
 }
 
 int batchclassexport( int argc, char** argv )
@@ -74,9 +79,13 @@ int batchclassexport( int argc, char** argv )
   }
 
   char* PkgName   = argv[2];
-  char Path[4096] = { 0 };
+  char  Path[4096];
 
-  realpath( argv[3], Path );
+  // Get the path relative to our original working directory
+  strcpy( Path, wd );
+  strcat( Path, "/");
+  strcat( Path, argv[3] );
+
   UClass* Class = UClass::StaticClass();
 
   // Load package
@@ -91,50 +100,44 @@ int batchclassexport( int argc, char** argv )
   Array<FExport>* ExportTable = Pkg->GetExportTable();
   for ( int i = 0; i < ExportTable->Size(); i++ )
   {
-    const char* ObjName = Pkg->ResolveNameFromIdx( Export->Name );
-    UClass* Obj = (UClass*)UPackage::StaticLoadObject( Pkg, ObjName, Class );
-    if ( Obj == NULL )
+    FExport* Export = &(*ExportTable)[i];
+    const char* ObjName = Pkg->ResolveNameFromIdx( Export->ObjectName );
+
+    // Why are there 'None' exports at all???
+    if ( strnicmp( ObjName, "None", 4 ) != 0 )
     {
-      Logf( LOG_CRIT, "Failed to load object '%s'\n");
-      return ERR_BAD_OBJECT;
+      // Check class type
+      const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
+      if ( strnicmp( ClassName, "None", 4 ) == 0 )
+      {
+        printf( "Exporting %s.uc\n", ObjName );
+ 
+        UClass* Obj = (UClass*)UPackage::StaticLoadObject( Pkg, ObjName, Class );
+        if ( Obj == NULL )
+        {
+          Logf( LOG_CRIT, "Failed to load object '%s'\n");
+          return ERR_BAD_OBJECT;
+        }
+        
+        Obj->ExportToFile( Path, NULL );
+      }
     }
-    
-    Obj->Export( Path, NULL ); 
   }
 
   return 0;
 }
 
-int StripSource( int argc, char** argv )
+int GamePromptHandler( Array<char*>* Names )
 {
-  printf("********************************************************************\n");
-  printf("Don't hinder creativity by hiding your source. You aren't \"securing\"\n");
-  printf("anything, and you aren't preventing anyone who wants to \"hack\" your mod\n");
-  printf("from doing so anyway. Write secure code if you want a secure mod.\n");
-  printf("\n");
-  printf("Obscurity is NOT security.\n");
-  printf("********************************************************************\n");
-  return -1;
-}
-
-void GamePromptHandler( char* PathOut, char* NameOut )
-{
-  Array<char*> GameNames;
-  int i = 1;
-  char* GameName = GLibunrConfig->ReadString( "Game", "Name", 0 );
-  char* GamePath = NULL;
+  int i;
   char InputBuffer[4096] = { 0 };
 
   // Print game choices out
   printf("Pick a game:\n");
-  while ( GameName != NULL )
-  {
-    GameNames.Add( GameName );
-    printf( "\t(%i) %s\n", i, GameName );
-    GameName = GLibunrConfig->ReadString( "Game", "Name", i );
-    i++;
-  }
-  printf( "\t(%i) Add game\n", i );
+  for ( i = 0; i < Names->Size(); i++ )
+    printf( "\t(%i) %s\n", i+1, (*Names)[i] );
+  
+  printf( "\t(%i) Add game\n", ++i );
 
   // Get input
   char* Result = NULL;
@@ -142,68 +145,61 @@ void GamePromptHandler( char* PathOut, char* NameOut )
     Result = fgets( InputBuffer, 2, stdin );
 
   int Choice = atoi( InputBuffer );
-  if ( Choice == i )
+  if ( (Choice-1) == i )
   {
-    // Prompt for a new game
     InputBuffer[0] = '\0';
     InputBuffer[1] = '\0';
 
+    // Prompt for a new game
     Result = NULL;
     while ( Result == NULL )
     {
       printf( "Enter the name of the game executable (i.e.; Unreal or DeusEx): " );
-      Result = fgets( NameOut, GPC_NAME_BUF_LEN, stdin );
+      Result = fgets( InputBuffer, sizeof( InputBuffer ), stdin );
     }
 
-    char* RemoveNewline = strchr( NameOut, '\n' );
+    char* RemoveNewline = strchr( InputBuffer, '\n' );
     if ( RemoveNewline )
       *RemoveNewline = '\0';
 
+    // Add it to the config
+    GLibunrConfig->WriteString( "Game", "Name", InputBuffer, i );
+
     // Get path name
+    xstl::Set( InputBuffer, 0, sizeof( InputBuffer ) );
     Result = NULL;
     while ( Result == NULL )
     {
-      printf( "Enter the absolute path of the game: " );
-      Result = fgets( PathOut, GPC_PATH_BUF_LEN, stdin );
+      printf( "Enter the relative path of the game: " );
+      Result = fgets( InputBuffer, sizeof( InputBuffer ), stdin );
     }
 
-    RemoveNewline = strchr( PathOut, '\n' );
+    RemoveNewline = strchr( InputBuffer, '\n' );
     if ( RemoveNewline )
       *RemoveNewline = '\0';
-  }
-  else
-  {
-    // Get game name and path
-    GameName = GameNames[Choice-1];
-    GamePath = GLibunrConfig->ReadString( "Game", "Name", Choice-1 );
 
-    // Copy them
-    strncpy( GamePath, PathOut, GPC_PATH_BUF_LEN );
-    strncpy( GameName, NameOut, GPC_NAME_BUF_LEN );
-
-    // Free everything up
-    for ( int i = 0; i < GameNames.Size(); i++ )
-      xstl::Free( GameNames[i] );
-    
-    xstl::Free( GamePath );
+    // Add it to the config
+    GLibunrConfig->WriteString( "Game", "Path", InputBuffer, i );
+    GLibunrConfig->Save();
   }
+  
+  return Choice - 1;
 }
 
 DECLARE_UCC_COMMAND( batchclassexport );
-DECLARE_UCC_COMMAND( StripSource );
 
 CommandHandler GetCommandFunction( char* CmdName )
 {
   Array<UccCommand*> Commands;
 
   #define APPEND_COMMAND( name ) \
-    Commands.Add( name##Command )
+    Commands.PushBack( &name##Command )
 
   APPEND_COMMAND( batchclassexport );
   
   for ( int i = 0; i < Commands.Size(); i++ )
-    if ( strnicmp( Commands[i], CmdName ) == 0 )
-      return Commands[i].Func;
+    if ( stricmp( Commands[i]->Name, CmdName ) == 0 )
+      return Commands[i]->Func;
 }
 
 int main( int argc, char** argv )
@@ -224,18 +220,25 @@ int main( int argc, char** argv )
   // Check the command and run it
   if ( Cmd == NULL )
   {
-    printf("Unknown command '%s'\n", Cmd );
+    printf("Unknown command '%s'\n", argv[1] );
     ReturnCode = ERR_UNKNOWN_CMD;
   }
   else
   {
+    // Preserve the current working directory
+    getcwd( wd, sizeof( wd ) );
+
     if ( !LibunrInit( GamePromptHandler, NULL ) )
     {
       printf("libunr init failed; exiting\n");
       ReturnCode = ERR_LIBUNR_INIT;
     }
-   
-    ReturnCode = Cmd( argc, argv );
+    else
+    {
+      ReturnCode = Cmd( argc, argv );
+    }
   }
+
+  return ReturnCode;
 }
 

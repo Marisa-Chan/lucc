@@ -8,7 +8,7 @@ if( NOT CMAKE_BUILD_TYPE )
 endif()
 option (BUILD32 "BUILD32" OFF)
 
-set (SOURCES TestMain.cpp)
+set (SOURCES lucc.cpp)
 
 set (XSTL_ROOT   ${CMAKE_CURRENT_SOURCE_DIR}/../xstl)
 set (XSTL_INC    ${XSTL_ROOT}/include)
