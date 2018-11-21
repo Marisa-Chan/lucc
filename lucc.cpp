@@ -89,7 +89,7 @@ int batchclassexport( int argc, char** argv )
   UClass* Class = UClass::StaticClass();
 
   // Load package
-  UPackage* Pkg = UPackage::StaticLoadPkg( PkgName );
+  UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
   if ( Pkg == NULL )
   {
     Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist\n" );
@@ -112,7 +112,7 @@ int batchclassexport( int argc, char** argv )
       {
         printf( "Exporting %s.uc\n", ObjName );
  
-        UClass* Obj = (UClass*)UPackage::StaticLoadObject( Pkg, ObjName, Class );
+        UClass* Obj = (UClass*)UObject::StaticLoadObject( Pkg, ObjName, Class, NULL );
         if ( Obj == NULL )
         {
           Logf( LOG_CRIT, "Failed to load object '%s'\n");
