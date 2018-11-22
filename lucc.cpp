@@ -112,7 +112,7 @@ int batchclassexport( int argc, char** argv )
       {
         printf( "Exporting %s.uc\n", ObjName );
  
-        UClass* Obj = (UClass*)UObject::StaticLoadObject( Pkg, ObjName, Class, NULL );
+        UClass* Obj = (UClass*)UObject::StaticLoadObject( Pkg, ObjName, Class, NULL, true );
         if ( Obj == NULL )
         {
           Logf( LOG_CRIT, "Failed to load object '%s'\n");
