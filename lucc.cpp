@@ -39,6 +39,7 @@
 #define ERR_BAD_OBJECT    4
 #define ERR_UNKNOWN_CMD   5
 #define ERR_LIBUNR_INIT   6
+#define ERR_BAD_PATH      7
 
 // Working directory
 char wd[4096];
@@ -86,6 +87,12 @@ int batchclassexport( int argc, char** argv )
   strcat( Path, "/");
   strcat( Path, argv[3] );
 
+  if ( !USystem::MakeDir( Path ) )
+  {
+    Logf( LOG_CRIT, "Failed to create output folder '%s'",
+          Path );
+    return ERR_BAD_PATH;
+  }
   UClass* Class = UClass::StaticClass();
 
   // Load package
