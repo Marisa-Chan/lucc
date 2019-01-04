@@ -149,13 +149,14 @@ int GamePromptHandler( Array<char*>* Names )
   // Get input
   char* Result = NULL;
   while ( Result == NULL )
-    Result = fgets( InputBuffer, 2, stdin );
+    Result = fgets( InputBuffer, 3, stdin );
 
   int Choice = atoi( InputBuffer );
-  if ( (Choice-1) == i )
+  if ( Choice == i )
   {
     InputBuffer[0] = '\0';
     InputBuffer[1] = '\0';
+    InputBuffer[2] = '\0';
 
     // Prompt for a new game
     Result = NULL;
@@ -170,7 +171,7 @@ int GamePromptHandler( Array<char*>* Names )
       *RemoveNewline = '\0';
 
     // Add it to the config
-    GLibunrConfig->WriteString( "Game", "Name", InputBuffer, i );
+    GLibunrConfig->WriteString( "Game", "Name", InputBuffer, i-1 );
 
     // Get path name
     xstl::Set( InputBuffer, 0, sizeof( InputBuffer ) );
@@ -186,7 +187,7 @@ int GamePromptHandler( Array<char*>* Names )
       *RemoveNewline = '\0';
 
     // Add it to the config
-    GLibunrConfig->WriteString( "Game", "Path", InputBuffer, i );
+    GLibunrConfig->WriteString( "Game", "Path", InputBuffer, i-1 );
     GLibunrConfig->Save();
   }
   
