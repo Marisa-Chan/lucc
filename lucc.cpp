@@ -103,7 +103,7 @@ int batchclassexport( int argc, char** argv )
     return ERR_MISSING_PKG;
   }
 
-  // Iterate and export all objects and export class scripts
+  // Iterate and export all class scripts
   Array<FExport>* ExportTable = Pkg->GetExportTable();
   for ( int i = 0; i < ExportTable->Size(); i++ )
   {
@@ -131,6 +131,196 @@ int batchclassexport( int argc, char** argv )
     }
   }
 
+  return 0;
+}
+
+int batchtextureexport( int argc, char** argv )
+{
+  if ( argc < 4 )
+  {
+    printf("batchtextureexport usage:\n");
+    printf("\tlucc batchtextureexport <Package Name> <Export Path>\n\n");
+    return ERR_BAD_ARGS;
+  }
+
+  char* PkgName = argv[2];
+  char  Path[4096];
+
+  // Get the path relative to our original working directory
+  strcpy( Path, wd );
+  strcat( Path, "/");
+  strcat( Path, argv[3] );
+
+  if ( !USystem::MakeDir( Path ) )
+  {
+    Logf( LOG_CRIT, "Failed to create output folder '%s'",
+          Path );
+    return ERR_BAD_PATH;
+  }
+  UClass* Class = UTexture::StaticClass();
+
+  // Load package
+  UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
+  if ( Pkg == NULL )
+  {
+    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist\n" );
+    return ERR_MISSING_PKG;
+  }
+
+  // Iterate and export all textures
+  Array<FExport>* ExportTable = Pkg->GetExportTable();
+  for ( int i = 0; i < ExportTable->Size(); i++ )
+  {
+    FExport* Export = &(*ExportTable)[i];
+    const char* ObjName = Pkg->ResolveNameFromIdx( Export->ObjectName );
+
+    // Why are there 'None' exports at all???
+    if ( strnicmp( ObjName, "None", 4 ) != 0 )
+    {
+      // Check class type
+      const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
+      if ( strnicmp( ClassName, "Texture", 7 ) == 0 )
+      {
+        printf( "Exporting %s.bmp\n", ObjName );
+ 
+        UTexture* Obj = (UTexture*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
+        if ( Obj == NULL )
+        {
+          Logf( LOG_CRIT, "Failed to load object '%s'\n");
+          return ERR_BAD_OBJECT;
+        }
+        
+        Obj->ExportToFile( Path, "bmp" );
+      }
+    }
+  }
+
+  return 0;
+}
+
+int batchsoundexport( int argc, char** argv )
+{
+  if ( argc < 4 )
+  {
+    printf("batchsoundexport usage:\n");
+    printf("\tlucc batchsoundexport <Package Name> <Export Path>\n\n");
+    return ERR_BAD_ARGS;
+  }
+
+  char* PkgName = argv[2];
+  char  Path[4096];
+
+  // Get the path relative to our original working directory
+  strcpy( Path, wd );
+  strcat( Path, "/");
+  strcat( Path, argv[3] );
+
+  if ( !USystem::MakeDir( Path ) )
+  {
+    Logf( LOG_CRIT, "Failed to create output folder '%s'",
+          Path );
+    return ERR_BAD_PATH;
+  }
+  UClass* Class = USound::StaticClass();
+
+  // Load package
+  UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
+  if ( Pkg == NULL )
+  {
+    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist\n" );
+    return ERR_MISSING_PKG;
+  }
+
+  // Iterate and export all sounds
+  Array<FExport>* ExportTable = Pkg->GetExportTable();
+  for ( int i = 0; i < ExportTable->Size(); i++ )
+  {
+    FExport* Export = &(*ExportTable)[i];
+    const char* ObjName = Pkg->ResolveNameFromIdx( Export->ObjectName );
+
+    // Why are there 'None' exports at all???
+    if ( strnicmp( ObjName, "None", 4 ) != 0 )
+    {
+      // Check class type
+      const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
+      if ( strnicmp( ClassName, "Sound", 5 ) == 0 )
+      {
+        printf( "Exporting %s.wav\n", ObjName );
+ 
+        USound* Obj = (USound*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
+        if ( Obj == NULL )
+        {
+          Logf( LOG_CRIT, "Failed to load object '%s'\n");
+          return ERR_BAD_OBJECT;
+        }
+        
+        Obj->ExportToFile( Path, NULL );
+      }
+    }
+  }
+  return 0;
+}
+
+int batchmusicexport( int argc, char** argv )
+{
+  if ( argc < 4 )
+  {
+    printf("batchmusicexport usage:\n");
+    printf("\tlucc batchmusicexport <Package Name> <Export Path>\n\n");
+    return ERR_BAD_ARGS;
+  }
+
+  char* PkgName = argv[2];
+  char  Path[4096];
+
+  // Get the path relative to our original working directory
+  strcpy( Path, wd );
+  strcat( Path, "/");
+  strcat( Path, argv[3] );
+
+  if ( !USystem::MakeDir( Path ) )
+  {
+    Logf( LOG_CRIT, "Failed to create output folder '%s'",
+          Path );
+    return ERR_BAD_PATH;
+  }
+  UClass* Class = USound::StaticClass();
+
+  // Load package
+  UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
+  if ( Pkg == NULL )
+  {
+    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist\n" );
+    return ERR_MISSING_PKG;
+  }
+
+  // Iterate and export all music files
+  Array<FExport>* ExportTable = Pkg->GetExportTable();
+  for ( int i = 0; i < ExportTable->Size(); i++ )
+  {
+    FExport* Export = &(*ExportTable)[i];
+    const char* ObjName = Pkg->ResolveNameFromIdx( Export->ObjectName );
+
+    // Why are there 'None' exports at all???
+    if ( strnicmp( ObjName, "None", 4 ) != 0 )
+    {
+      // Check class type
+      const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
+      if ( strnicmp( ClassName, "Music", 5 ) == 0 )
+      {
+        printf( "Exporting %s\n", ObjName );
+ 
+        UMusic* Obj = (UMusic*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
+        if ( Obj == NULL )
+        {
+          Logf( LOG_CRIT, "Failed to load object '%s'\n");
+          return ERR_BAD_OBJECT;
+        }
+        
+        Obj->ExportToFile( Path, NULL );
+      }
+    }
+  }
   return 0;
 }
 
@@ -195,6 +385,9 @@ int GamePromptHandler( Array<char*>* Names )
 }
 
 DECLARE_UCC_COMMAND( batchclassexport );
+DECLARE_UCC_COMMAND( batchtextureexport );
+DECLARE_UCC_COMMAND( batchsoundexport );
+DECLARE_UCC_COMMAND( batchmusicexport );
 
 CommandHandler GetCommandFunction( char* CmdName )
 {
@@ -204,6 +397,9 @@ CommandHandler GetCommandFunction( char* CmdName )
     Commands.PushBack( &name##Command )
 
   APPEND_COMMAND( batchclassexport );
+  APPEND_COMMAND( batchtextureexport );
+  APPEND_COMMAND( batchsoundexport );
+  APPEND_COMMAND( batchmusicexport );
   
   for ( int i = 0; i < Commands.Size(); i++ )
     if ( stricmp( Commands[i]->Name, CmdName ) == 0 )
