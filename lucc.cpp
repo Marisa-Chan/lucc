@@ -432,7 +432,7 @@ int main( int argc, char** argv )
     // Preserve the current working directory
     getcwd( wd, sizeof( wd ) );
 
-    if ( !LibunrInit( GamePromptHandler, NULL ) )
+    if ( !LibunrInit( GamePromptHandler, NULL, true ) )
     {
       printf("libunr init failed; exiting\n");
       ReturnCode = ERR_LIBUNR_INIT;
