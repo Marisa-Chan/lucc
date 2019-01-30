@@ -66,6 +66,7 @@ void PrintHelpAndExit()
   printf("\tlucc batchsoundexport\n");
   printf("\tlucc batchmusicexport\n");
   printf("\tlucc batchtextureexport\n");
+  printf("\tlucc levelexport\n");
 
   exit( ERR_BAD_ARGS );
 }
@@ -324,6 +325,45 @@ int batchmusicexport( int argc, char** argv )
   return 0;
 }
 
+int levelexport( int argc, char** argv )
+{
+  if ( argc < 4 )
+  {
+    printf("levelexport usage:\n");
+    printf("\tlucc levelexport <Package Name> <Export Path>\n\n");
+    return ERR_BAD_ARGS;
+  }
+
+  char* PkgName = argv[2];
+  char  Path[4096];
+
+  // Get the path relative to our original working directory
+  strcpy( Path, wd );
+  strcat( Path, "/");
+  strcat( Path, argv[3] );
+
+  if ( !USystem::MakeDir( Path ) )
+  {
+    Logf( LOG_CRIT, "Failed to create output folder '%s'",
+          Path );
+    return ERR_BAD_PATH;
+  }
+
+  // Load package
+  UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
+  if ( Pkg == NULL )
+  {
+    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist\n" );
+    return ERR_MISSING_PKG;
+  }
+
+  // Load level object and export
+  ULevel* Level = (ULevel*)UObject::StaticLoadObject( Pkg, "MyLevel", ULevel::StaticClass(), NULL );
+  Level->ExportToFile( Path, NULL );
+
+  return 0;
+}
+
 int GamePromptHandler( Array<char*>* Names )
 {
   int i;
@@ -388,6 +428,7 @@ DECLARE_UCC_COMMAND( batchclassexport );
 DECLARE_UCC_COMMAND( batchtextureexport );
 DECLARE_UCC_COMMAND( batchsoundexport );
 DECLARE_UCC_COMMAND( batchmusicexport );
+DECLARE_UCC_COMMAND( levelexport );
 
 CommandHandler GetCommandFunction( char* CmdName )
 {
@@ -400,6 +441,7 @@ CommandHandler GetCommandFunction( char* CmdName )
   APPEND_COMMAND( batchtextureexport );
   APPEND_COMMAND( batchsoundexport );
   APPEND_COMMAND( batchmusicexport );
+  APPEND_COMMAND( levelexport );
   
   for ( int i = 0; i < Commands.Size(); i++ )
     if ( stricmp( Commands[i]->Name, CmdName ) == 0 )
