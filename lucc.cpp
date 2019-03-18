@@ -403,7 +403,7 @@ int missingnativefields( int argc, char** argv )
         for ( UField* It = Class->Children; It != NULL; It = It->Next )
         {
           UProperty* Prop = SafeCast<UProperty>( It );
-          if ( Prop && Prop->Offset == MAX_UINT32 )
+          if ( Prop && Prop->Offset == MAX_UINT32 && Prop->Outer == Class )
           {
             if ( NumMissing == 0 )
             {
@@ -411,8 +411,7 @@ int missingnativefields( int argc, char** argv )
               printf("// Missing native fields for class '%s'\n", Class->Name);
               printf("//====================================================================\n");
             }
-            printf("%s '%s.%s' does not have a native component\n", 
-              Prop->Class->Name, Prop->Outer->Name, Prop->Name );
+            printf("%s '%s' does not have a native component\n", Prop->Class->Name, Prop->Name );
             NumMissing++;
           }
         }
