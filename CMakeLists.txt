@@ -37,7 +37,7 @@ add_definitions ("-std=c++11" "-Wno-attributes" "-DXSTL_ARRAY_STD" "-DXSTL_STRIN
 
 # Debug symbols & optimization levels
 if ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
-  add_definitions("-O1" "-g")
+  add_definitions("-O0" "-g")
 elseif ( CMAKE_BUILD_TYPE STREQUAL "Release" )
   add_definitions("-O2")
 elseif ( CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" )

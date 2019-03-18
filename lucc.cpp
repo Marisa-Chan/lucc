@@ -357,6 +357,55 @@ int levelexport( int argc, char** argv )
   return 0;
 }
 
+int missingnativefields( int argc, char** argv )
+{
+  if ( argc < 4 )
+  {
+    printf("levelexport usage:\n");
+    printf("\tlucc missingnativefields <Package Name> <Class Name>\n\n");
+    return ERR_BAD_ARGS;
+  }
+  
+  char* PkgName = argv[2];
+  
+  // Load package
+  UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
+  if ( Pkg == NULL )
+  {
+    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist\n" );
+    return ERR_MISSING_PKG;
+  }
+  
+  // Load class object
+  UClass* Class = (UClass*)UObject::StaticLoadObject( Pkg, argv[3], UClass::StaticClass(), NULL );
+  if ( Class == NULL )
+  {
+    Logf( LOG_CRIT, "Failed to load class '%s'\n", argv[3] );
+    return ERR_MISSING_CLASS;
+  }
+
+  // Iterate through all class properties
+  int TotalMissingFields = 0;
+  printf("//====================================================================\n");
+  printf("// Missing native fields for class '%s'\n", argv[3]);
+  printf("//====================================================================\n");
+  for ( UField* It = Class->Children; It != NULL; It = It->Next )
+  {
+    UProperty* Prop = SafeCast<UProperty>( It );
+    if ( Prop && Prop->Offset == MAX_UINT32 )
+    {
+      TotalMissingFields++;
+      printf("Property '%s.%s' does not have a native component\n", Prop->Outer->Name, Prop->Name );
+    }
+  }
+  printf("//====================================================================\n");
+  printf("// Total missing fields: %i\n", TotalMissingFields );
+  printf("//====================================================================\n");
+
+  return 0;
+  
+}
+
 int GamePromptHandler( Array<char*>* Names )
 {
   int i;
@@ -422,6 +471,7 @@ DECLARE_UCC_COMMAND( batchtextureexport );
 DECLARE_UCC_COMMAND( batchsoundexport );
 DECLARE_UCC_COMMAND( batchmusicexport );
 DECLARE_UCC_COMMAND( levelexport );
+DECLARE_UCC_COMMAND( missingnativefields );
 
 CommandHandler GetCommandFunction( char* CmdName )
 {
@@ -435,6 +485,7 @@ CommandHandler GetCommandFunction( char* CmdName )
   APPEND_COMMAND( batchsoundexport );
   APPEND_COMMAND( batchmusicexport );
   APPEND_COMMAND( levelexport );
+  APPEND_COMMAND( missingnativefields );
   
   for ( int i = 0; i < Commands.Size(); i++ )
     if ( stricmp( Commands[i]->Name, CmdName ) == 0 )
