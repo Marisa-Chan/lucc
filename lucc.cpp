@@ -359,16 +359,17 @@ int levelexport( int argc, char** argv )
 
 int missingnativefields( int argc, char** argv )
 {
-  if ( argc < 4 )
+  if ( argc < 3 )
   {
     printf("levelexport usage:\n");
-    printf("\tlucc missingnativefields <Package Name> <Class Name>\n\n");
+    printf("\tlucc missingnativefields <Package Name>\n\n");
     return ERR_BAD_ARGS;
   }
   
   char* PkgName = argv[2];
-  
+
   // Load package
+  USystem::LogLevel = LOG_CRIT;
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
   if ( Pkg == NULL )
   {
@@ -376,34 +377,50 @@ int missingnativefields( int argc, char** argv )
     return ERR_MISSING_PKG;
   }
   
-  // Load class object
-  UClass* Class = (UClass*)UObject::StaticLoadObject( Pkg, argv[3], UClass::StaticClass(), NULL );
-  if ( Class == NULL )
+  // Iterate and load all classes
+  Array<FExport>* ExportTable = Pkg->GetExportTable();
+  for ( int i = 0; i < ExportTable->Size(); i++ )
   {
-    Logf( LOG_CRIT, "Failed to load class '%s'\n", argv[3] );
-    return ERR_MISSING_CLASS;
-  }
+    FExport* Export = &(*ExportTable)[i];
+    const char* ObjName = Pkg->ResolveNameFromIdx( Export->ObjectName );
 
-  // Iterate through all class properties
-  int TotalMissingFields = 0;
-  printf("//====================================================================\n");
-  printf("// Missing native fields for class '%s'\n", argv[3]);
-  printf("//====================================================================\n");
-  for ( UField* It = Class->Children; It != NULL; It = It->Next )
-  {
-    UProperty* Prop = SafeCast<UProperty>( It );
-    if ( Prop && Prop->Offset == MAX_UINT32 )
+    // Why are there 'None' exports at all???
+    if ( strnicmp( ObjName, "None", 4 ) != 0 )
     {
-      TotalMissingFields++;
-      printf("Property '%s.%s' does not have a native component\n", Prop->Outer->Name, Prop->Name );
+      // Check class type
+      const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
+      if ( strnicmp( ClassName, "None", 4 ) == 0 )
+      {
+        UClass* Class = (UClass*)UObject::StaticLoadObject( Pkg, Export, UClass::StaticClass(), NULL, true );
+        if ( !Class )
+        {
+          Logf( LOG_CRIT, "Failed to load object '%s'\n", ClassName );
+          return ERR_BAD_OBJECT;
+        }
+
+        // Iterate through all class properties
+        int NumMissing = 0;
+        for ( UField* It = Class->Children; It != NULL; It = It->Next )
+        {
+          UProperty* Prop = SafeCast<UProperty>( It );
+          if ( Prop && Prop->Offset == MAX_UINT32 )
+          {
+            if ( NumMissing == 0 )
+            {
+              printf("//====================================================================\n");
+              printf("// Missing native fields for class '%s'\n", Class->Name);
+              printf("//====================================================================\n");
+            }
+            printf("%s '%s.%s' does not have a native component\n", 
+              Prop->Class->Name, Prop->Outer->Name, Prop->Name );
+            NumMissing++;
+          }
+        }
+      }
     }
   }
-  printf("//====================================================================\n");
-  printf("// Total missing fields: %i\n", TotalMissingFields );
-  printf("//====================================================================\n");
 
-  return 0;
-  
+  return 0;  
 }
 
 int GamePromptHandler( Array<char*>* Names )
