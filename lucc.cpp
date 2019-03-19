@@ -408,10 +408,11 @@ int missingnativefields( int argc, char** argv )
             if ( NumMissing == 0 )
             {
               printf("//====================================================================\n");
-              printf("// Missing native fields for class '%s'\n", Class->Name);
+              printf("// Missing native fields for class '%s'\n", Class->Name.Data());
               printf("//====================================================================\n");
             }
-            printf("%s '%s' does not have a native component\n", Prop->Class->Name, Prop->Name );
+            printf("%s '%s' does not have a native component\n", 
+                Prop->Class->Name.Data(), Prop->Name.Data() );
             NumMissing++;
           }
         }
