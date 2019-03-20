@@ -411,8 +411,17 @@ int missingnativefields( int argc, char** argv )
               printf("// Missing native fields for class '%s'\n", Class->Name.Data());
               printf("//====================================================================\n");
             }
-            printf("%s '%s' does not have a native component\n", 
-                Prop->Class->Name.Data(), Prop->Name.Data() );
+            if ( Prop->ArrayDim > 1 )
+              printf("Array of %i ", Prop->ArrayDim );
+
+            if ( Prop->PropertyType == PROP_Struct )
+              printf("%s (%s) '%s' does not have a native component\n", 
+                  Prop->Class->Name.Data(), ((UStructProperty*)Prop)->Struct->Name.Data(), Prop->Name.Data());
+            else if ( Prop->PropertyType == PROP_Object )
+              printf("%s (%s) '%s' does not have a native component\n",
+                  Prop->Class->Name.Data(), ((UObjectProperty*)Prop)->ObjectType->Name.Data(), Prop->Name.Data());
+            else
+              printf("%s '%s' does not have a native component\n", Prop->Class->Name.Data(), Prop->Name.Data());
             NumMissing++;
           }
         }
@@ -543,6 +552,10 @@ int main( int argc, char** argv )
     else
     {
       ReturnCode = Cmd( argc, argv );
+      if ( ReturnCode > 0 )
+        printf("Command failed\n");
+      else
+        printf("Command completed successfully\n");
     }
   }
 
