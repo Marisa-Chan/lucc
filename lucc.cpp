@@ -357,6 +357,63 @@ int levelexport( int argc, char** argv )
   return 0;
 }
 
+const char* const CppPropNames[] =
+{
+  "None",
+  "u8",
+  "int",
+  "bool",
+  "float",
+  "UObject*",
+  "FName",
+  "FString*",
+  "UClass*",
+  "Array",
+  "UStruct*",
+  "FVector",
+  "FRotator",
+  "FString*",
+  "Map",
+  "???",
+  "u64"
+};
+
+char* GetCppClassName( UProperty* Prop )
+{
+  // Not thread-safe
+  static char ClassName[128] = { 0 };
+  xstl::Set( ClassName, 0, sizeof(ClassName) );
+
+  UObjectProperty* ObjProp = (UObjectProperty*)Prop;
+  if ( ObjProp->ObjectType->IsA( AActor::StaticClass() ) )
+    ClassName[0] = 'A';
+  else
+    ClassName[0] = 'U';
+
+  strcat( ClassName, ObjProp->ObjectType->Name.Data() );
+  strcat( ClassName, "*" );
+  return ClassName;
+}
+
+char* GetCppArrayType( UProperty* Prop )
+{
+  // Not thread-safe
+  static char ArrayName[128] = { 0 };
+  xstl::Set( ArrayName, 0, sizeof(ArrayName) );
+
+  UArrayProperty* ArrayProp = (UArrayProperty*)Prop;
+  if ( ArrayProp->Inner->PropertyType == PROP_Object )
+    return GetCppClassName( ArrayProp->Inner );
+  else if ( ArrayProp->Inner->PropertyType == PROP_Struct )
+  {
+    ArrayName[0] = 'F';
+    strcat( ArrayName, ((UStructProperty*)ArrayProp->Inner)->Struct->Name.Data() );
+    return ArrayName;
+  }
+  
+  return (char*)CppPropNames[ArrayProp->Inner->PropertyType];
+}
+
 int missingnativefields( int argc, char** argv )
 {
   if ( argc < 3 )
@@ -398,7 +455,7 @@ int missingnativefields( int argc, char** argv )
           return ERR_BAD_OBJECT;
         }
 
-        // Iterate through all class properties
+        // Iterate through all class properties for dumping cpp class text
         int NumMissing = 0;
         for ( UField* It = Class->Children; It != NULL; It = It->Next )
         {
@@ -411,19 +468,33 @@ int missingnativefields( int argc, char** argv )
               printf("// Missing native fields for class '%s'\n", Class->Name.Data());
               printf("//====================================================================\n");
             }
-            if ( Prop->ArrayDim > 1 )
-              printf("Array of %i ", Prop->ArrayDim );
 
             if ( Prop->PropertyType == PROP_Struct )
-              printf("%s (%s) '%s' does not have a native component\n", 
-                  Prop->Class->Name.Data(), ((UStructProperty*)Prop)->Struct->Name.Data(), Prop->Name.Data());
+              printf("\tF%s %s", ((UStructProperty*)Prop)->Struct->Name.Data(), Prop->Name.Data() );
             else if ( Prop->PropertyType == PROP_Object )
-              printf("%s (%s) '%s' does not have a native component\n",
-                  Prop->Class->Name.Data(), ((UObjectProperty*)Prop)->ObjectType->Name.Data(), Prop->Name.Data());
+              printf("\t%s %s", GetCppClassName( Prop ), Prop->Name.Data(), Prop->Name.Data() );
+            else if ( Prop->PropertyType == PROP_Array )
+              printf("\tArray<%s>* %s", GetCppArrayType( Prop ), Prop->Name.Data() );
             else
-              printf("%s '%s' does not have a native component\n", Prop->Class->Name.Data(), Prop->Name.Data());
+              printf("\t%s %s", CppPropNames[Prop->PropertyType], Prop->Name.Data() );
+
+            if ( Prop->ArrayDim > 1 )
+              printf("[%i]", Prop->ArrayDim );
+            printf(";\n");
+
             NumMissing++;
           }
+        }
+
+        if ( NumMissing == 0 )
+          continue;
+
+        // Iterate again, but this time spit out LINK_NATIVE_PROPERTY stuff
+        for ( UField* It = Class->Children; It != NULL; It = It->Next )
+        {
+          UProperty* Prop = SafeCast<UProperty>( It );
+          if ( Prop && Prop->Offset == MAX_UINT32 && Prop->Outer == Class )
+            printf("\tLINK_NATIVE_PROPERTY( %s );\n", Prop->Name.Data() );
         }
       }
     }
