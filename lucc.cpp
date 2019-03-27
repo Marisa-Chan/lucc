@@ -385,7 +385,7 @@ char* GetCppClassName( UProperty* Prop )
   xstl::Set( ClassName, 0, sizeof(ClassName) );
 
   UObjectProperty* ObjProp = (UObjectProperty*)Prop;
-  if ( ObjProp->ObjectType->IsA( AActor::StaticClass() ) )
+  if ( ObjProp->ObjectType->ClassIsA( AActor::StaticClass() ) )
     ClassName[0] = 'A';
   else
     ClassName[0] = 'U';
@@ -470,13 +470,13 @@ int missingnativefields( int argc, char** argv )
             }
 
             if ( Prop->PropertyType == PROP_Struct )
-              printf("\tF%s %s", ((UStructProperty*)Prop)->Struct->Name.Data(), Prop->Name.Data() );
+              printf("  F%s %s", ((UStructProperty*)Prop)->Struct->Name.Data(), Prop->Name.Data() );
             else if ( Prop->PropertyType == PROP_Object )
-              printf("\t%s %s", GetCppClassName( Prop ), Prop->Name.Data(), Prop->Name.Data() );
+              printf("  %s %s", GetCppClassName( Prop ), Prop->Name.Data(), Prop->Name.Data() );
             else if ( Prop->PropertyType == PROP_Array )
-              printf("\tArray<%s>* %s", GetCppArrayType( Prop ), Prop->Name.Data() );
+              printf("  Array<%s>* %s", GetCppArrayType( Prop ), Prop->Name.Data() );
             else
-              printf("\t%s %s", CppPropNames[Prop->PropertyType], Prop->Name.Data() );
+              printf("  %s %s", CppPropNames[Prop->PropertyType], Prop->Name.Data() );
 
             if ( Prop->ArrayDim > 1 )
               printf("[%i]", Prop->ArrayDim );
@@ -494,7 +494,7 @@ int missingnativefields( int argc, char** argv )
         {
           UProperty* Prop = SafeCast<UProperty>( It );
           if ( Prop && Prop->Offset == MAX_UINT32 && Prop->Outer == Class )
-            printf("\tLINK_NATIVE_PROPERTY( %s );\n", Prop->Name.Data() );
+            printf("  LINK_NATIVE_PROPERTY( %s );\n", Prop->Name.Data() );
         }
       }
     }
