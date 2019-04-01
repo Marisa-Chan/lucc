@@ -378,19 +378,25 @@ const char* const CppPropNames[] =
   "u64"
 };
 
-char* GetCppClassName( UProperty* Prop )
+char* GetCppClassName( UClass* Class )
 {
   // Not thread-safe
   static char ClassName[128] = { 0 };
   xstl::Set( ClassName, 0, sizeof(ClassName) );
-
-  UObjectProperty* ObjProp = (UObjectProperty*)Prop;
-  if ( ObjProp->ObjectType->ClassIsA( AActor::StaticClass() ) )
+  
+  if ( Class->ClassIsA( AActor::StaticClass() ) )
     ClassName[0] = 'A';
   else
     ClassName[0] = 'U';
+  
+  strcat( ClassName, Class->Name.Data() );
+  return ClassName;
+}
 
-  strcat( ClassName, ObjProp->ObjectType->Name.Data() );
+char* GetCppClassNameProp( UProperty* Prop )
+{
+  UObjectProperty* ObjProp = (UObjectProperty*)Prop;
+  char* ClassName = GetCppClassName( ObjProp->ObjectType );
   strcat( ClassName, "*" );
   return ClassName;
 }
@@ -403,7 +409,7 @@ char* GetCppArrayType( UProperty* Prop )
 
   UArrayProperty* ArrayProp = (UArrayProperty*)Prop;
   if ( ArrayProp->Inner->PropertyType == PROP_Object )
-    return GetCppClassName( ArrayProp->Inner );
+    return GetCppClassNameProp( ArrayProp->Inner );
   else if ( ArrayProp->Inner->PropertyType == PROP_Struct )
   {
     ArrayName[0] = 'F';
@@ -472,7 +478,7 @@ int missingnativefields( int argc, char** argv )
             if ( Prop->PropertyType == PROP_Struct )
               printf("  F%s %s", ((UStructProperty*)Prop)->Struct->Name.Data(), Prop->Name.Data() );
             else if ( Prop->PropertyType == PROP_Object )
-              printf("  %s %s", GetCppClassName( Prop ), Prop->Name.Data(), Prop->Name.Data() );
+              printf("  %s %s", GetCppClassNameProp( Prop ), Prop->Name.Data(), Prop->Name.Data() );
             else if ( Prop->PropertyType == PROP_Array )
               printf("  Array<%s>* %s", GetCppArrayType( Prop ), Prop->Name.Data() );
             else
@@ -490,12 +496,14 @@ int missingnativefields( int argc, char** argv )
           continue;
 
         // Iterate again, but this time spit out LINK_NATIVE_PROPERTY stuff
+        printf("BEGIN_PROPERTY_LINK( %s, %i )\n", GetCppClassName( Class ), NumMissing);
         for ( UField* It = Class->Children; It != NULL; It = It->Next )
         {
           UProperty* Prop = SafeCast<UProperty>( It );
           if ( Prop && Prop->Offset == MAX_UINT32 && Prop->Outer == Class )
             printf("  LINK_NATIVE_PROPERTY( %s );\n", Prop->Name.Data() );
         }
+        printf("END_PROPERTY_LINK()\n");
       }
     }
   }
