@@ -511,7 +511,7 @@ int missingnativefields( int argc, char** argv )
   return 0;  
 }
 
-int GamePromptHandler( Array<char*>* Names, Array<char*>* Execs, Array<char*>* Paths )
+int GamePromptHandler( Array<char*>* Names )
 {
   int i;
   char InputBuffer[4096] = { 0 };
@@ -549,7 +549,6 @@ int GamePromptHandler( Array<char*>* Names, Array<char*>* Execs, Array<char*>* P
 
     // Add it to the config
     GLibunrConfig->WriteString( "Game", "Name", InputBuffer, i-1 );
-    Names->PushBack( strdup( InputBuffer ) );
 
     // Get exe name
     xstl::Set( InputBuffer, 0, sizeof( InputBuffer ) );
@@ -566,7 +565,6 @@ int GamePromptHandler( Array<char*>* Names, Array<char*>* Execs, Array<char*>* P
 
     // Add it to the config
     GLibunrConfig->WriteString( "Game", "Exec", InputBuffer, i-1 );
-    Execs->PushBack( strdup( InputBuffer ) );
 
     // Get path name
     xstl::Set( InputBuffer, 0, sizeof( InputBuffer ) );
@@ -583,9 +581,8 @@ int GamePromptHandler( Array<char*>* Names, Array<char*>* Execs, Array<char*>* P
 
     // Add it to the config
     GLibunrConfig->WriteString( "Game", "Path", InputBuffer, i-1 );
-    GLibunrConfig->Save();
 
-    Paths->PushBack( strdup( InputBuffer ) );
+    GLibunrConfig->Save();
   }
   
   return Choice - 1;
