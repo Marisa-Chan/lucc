@@ -511,7 +511,7 @@ int missingnativefields( int argc, char** argv )
   return 0;  
 }
 
-int GamePromptHandler( Array<char*>* Names )
+int GamePromptHandler( Array<char*>* Names, Array<char*>* Execs, Array<char*>* Paths )
 {
   int i;
   char InputBuffer[4096] = { 0 };
@@ -539,7 +539,7 @@ int GamePromptHandler( Array<char*>* Names )
     Result = NULL;
     while ( Result == NULL )
     {
-      printf( "Enter the name of the game executable (i.e.; Unreal or DeusEx): " );
+      printf( "Choose a name for this game entry (i.e.; Unreal226, Un227i, UT436, etc): " );
       Result = fgets( InputBuffer, sizeof( InputBuffer ), stdin );
     }
 
@@ -549,6 +549,24 @@ int GamePromptHandler( Array<char*>* Names )
 
     // Add it to the config
     GLibunrConfig->WriteString( "Game", "Name", InputBuffer, i-1 );
+    Names->PushBack( strdup( InputBuffer ) );
+
+    // Get exe name
+    xstl::Set( InputBuffer, 0, sizeof( InputBuffer ) );
+    Result = NULL;
+    while ( Result == NULL )
+    {
+      printf( "Enter the name of the Executable (i.e.; Unreal, UnrealTournament, DeusEx, etc): " );
+      Result = fgets( InputBuffer, sizeof( InputBuffer ), stdin );
+    }
+
+    RemoveNewline = strchr( InputBuffer, '\n' );
+    if ( RemoveNewline )
+      *RemoveNewline = '\0';
+
+    // Add it to the config
+    GLibunrConfig->WriteString( "Game", "Exec", InputBuffer, i-1 );
+    Execs->PushBack( strdup( InputBuffer ) );
 
     // Get path name
     xstl::Set( InputBuffer, 0, sizeof( InputBuffer ) );
@@ -566,6 +584,8 @@ int GamePromptHandler( Array<char*>* Names )
     // Add it to the config
     GLibunrConfig->WriteString( "Game", "Path", InputBuffer, i-1 );
     GLibunrConfig->Save();
+
+    Paths->PushBack( strdup( InputBuffer ) );
   }
   
   return Choice - 1;
