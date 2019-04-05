@@ -478,7 +478,7 @@ int missingnativefields( int argc, char** argv )
             if ( Prop->PropertyType == PROP_Struct )
               printf("  F%s %s", ((UStructProperty*)Prop)->Struct->Name.Data(), Prop->Name.Data() );
             else if ( Prop->PropertyType == PROP_Object )
-              printf("  %s %s", GetCppClassNameProp( Prop ), Prop->Name.Data(), Prop->Name.Data() );
+              printf("  %s %s", GetCppClassNameProp( Prop ), Prop->Name.Data() );
             else if ( Prop->PropertyType == PROP_Array )
               printf("  Array<%s>* %s", GetCppArrayType( Prop ), Prop->Name.Data() );
             else
@@ -625,6 +625,8 @@ CommandHandler GetCommandFunction( char* CmdName )
   for ( int i = 0; i < Commands.Size(); i++ )
     if ( stricmp( Commands[i]->Name, CmdName ) == 0 )
       return Commands[i]->Func;
+
+  return NULL;
 }
 
 int main( int argc, char** argv )
