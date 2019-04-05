@@ -523,12 +523,25 @@ int GamePromptHandler( Array<char*>* Names )
   
   printf( "\t(%i) Add game\n", ++i );
 
+tryAgain:
   // Get input
   char* Result = NULL;
   while ( Result == NULL )
     Result = fgets( InputBuffer, 3, stdin );
 
-  int Choice = atoi( InputBuffer );
+  int Choice = strtol( InputBuffer, NULL, 10 );
+
+  // Input validation
+  if ( Choice == 0 || Choice > i )
+  {
+    InputBuffer[0] = '\0';
+    InputBuffer[1] = '\0';
+    InputBuffer[2] = '\0';
+    printf( "Invalid choice, pick a game: " );
+    goto tryAgain;
+  }
+
+  // Input is valid
   if ( Choice == i )
   {
     InputBuffer[0] = '\0';
