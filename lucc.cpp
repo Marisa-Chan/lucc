@@ -93,7 +93,7 @@ int batchclassexport( int argc, char** argv )
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
   if ( Pkg == NULL )
   {
-    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist\n" );
+    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
     return ERR_MISSING_PKG;
   }
 
@@ -111,12 +111,12 @@ int batchclassexport( int argc, char** argv )
       const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
       if ( strnicmp( ClassName, "None", 4 ) == 0 )
       {
-        printf( "Exporting %s.uc\n", ObjName );
+        Logf( LOG_INFO, "Exporting %s.uc", ObjName );
  
         UClass* Obj = (UClass*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
         if ( Obj == NULL )
         {
-          Logf( LOG_CRIT, "Failed to load object '%s'\n");
+          Logf( LOG_CRIT, "Failed to load object '%s'");
           return ERR_BAD_OBJECT;
         }
         
@@ -157,7 +157,7 @@ int batchtextureexport( int argc, char** argv )
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
   if ( Pkg == NULL )
   {
-    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist\n" );
+    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
     return ERR_MISSING_PKG;
   }
 
@@ -175,12 +175,12 @@ int batchtextureexport( int argc, char** argv )
       const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
       if ( strnicmp( ClassName, "Texture", 7 ) == 0 )
       {
-        printf( "Exporting %s.bmp\n", ObjName );
+        Logf( LOG_INFO, "Exporting %s.bmp", ObjName );
  
         UTexture* Obj = (UTexture*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
         if ( Obj == NULL )
         {
-          Logf( LOG_CRIT, "Failed to load object '%s'\n");
+          Logf( LOG_CRIT, "Failed to load object '%s'");
           return ERR_BAD_OBJECT;
         }
         
@@ -221,7 +221,7 @@ int batchsoundexport( int argc, char** argv )
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
   if ( Pkg == NULL )
   {
-    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist\n" );
+    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
     return ERR_MISSING_PKG;
   }
 
@@ -239,12 +239,12 @@ int batchsoundexport( int argc, char** argv )
       const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
       if ( strnicmp( ClassName, "Sound", 5 ) == 0 )
       {
-        printf( "Exporting %s.wav\n", ObjName );
+        Logf( LOG_INFO, "Exporting %s.wav", ObjName );
  
         USound* Obj = (USound*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
         if ( Obj == NULL )
         {
-          Logf( LOG_CRIT, "Failed to load object '%s'\n");
+          Logf( LOG_CRIT, "Failed to load object '%s'");
           return ERR_BAD_OBJECT;
         }
         
@@ -284,7 +284,7 @@ int batchmusicexport( int argc, char** argv )
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
   if ( Pkg == NULL )
   {
-    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist\n" );
+    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
     return ERR_MISSING_PKG;
   }
 
@@ -302,12 +302,12 @@ int batchmusicexport( int argc, char** argv )
       const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
       if ( strnicmp( ClassName, "Music", 5 ) == 0 )
       {
-        printf( "Exporting %s\n", ObjName );
+        Logf( LOG_INFO, "Exporting %s", ObjName );
  
         UMusic* Obj = (UMusic*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
         if ( Obj == NULL )
         {
-          Logf( LOG_CRIT, "Failed to load object '%s'\n");
+          Logf( LOG_CRIT, "Failed to load object '%s'");
           return ERR_BAD_OBJECT;
         }
         
@@ -346,7 +346,7 @@ int levelexport( int argc, char** argv )
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
   if ( Pkg == NULL )
   {
-    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist\n" );
+    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
     return ERR_MISSING_PKG;
   }
 
@@ -647,26 +647,28 @@ int main( int argc, char** argv )
   // Check the command and run it
   if ( Cmd == NULL )
   {
-    printf("Unknown command '%s'\n", argv[1] );
+    Logf( LOG_CRIT, "Unknown command '%s'", argv[1] );
     ReturnCode = ERR_UNKNOWN_CMD;
   }
   else
   {
     // Preserve the current working directory
     getcwd( wd, sizeof( wd ) );
+    CreateLogFile( "lucc.log" );
 
     if ( !LibunrInit( GamePromptHandler, NULL, true ) )
     {
-      printf("libunr init failed; exiting\n");
+      Logf( LOG_CRIT, "libunr init failed; exiting");
       ReturnCode = ERR_LIBUNR_INIT;
     }
     else
     {
       ReturnCode = Cmd( argc, argv );
       if ( ReturnCode > 0 )
-        printf("Command failed\n");
+        Logf( LOG_CRIT, "Command failed");
       else
-        printf("Command completed successfully\n");
+        Logf( LOG_INFO, "Command completed successfully");
+      CloseLogFile();
     }
   }
 
