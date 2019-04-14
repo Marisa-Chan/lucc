@@ -6,6 +6,8 @@ CMakeFiles/
 CMakeCache.txt
 *.so
 *.dll
+*.exe
+*.a
 Makefile
 *.sh
 *.cmake
