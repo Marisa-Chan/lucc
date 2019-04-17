@@ -34,8 +34,10 @@
 #define ERR_LIBUNR_INIT   6
 #define ERR_BAD_PATH      7
 
-// Working directory
-char wd[4096];
+char wd[4096]; // Working directory
+char Path[4096] = { 0 };
+char* PkgName;
+char* SingleObject = NULL;
 
 // Command handler function
 typedef int(*CommandHandler)(int, char**);
@@ -55,47 +57,90 @@ void PrintHelpAndExit()
   printf("\tlucc [gopts] <command> <parameters>\n\n");
 
   printf("Commands for \"lucc\":\n");
-  printf("\tlucc batchclassexport\n");
-  printf("\tlucc batchsoundexport\n");
-  printf("\tlucc batchmusicexport\n");
-  printf("\tlucc batchtextureexport\n");
+  printf("\tlucc classexport\n");
+  printf("\tlucc soundexport\n");
+  printf("\tlucc musicexport\n");
+  printf("\tlucc textureexport\n");
   printf("\tlucc levelexport\n");
+  printf("\n");
 
   printf("Global options:\n");
   printf("\t-g \"<GameName>\"   - Selects the specified game automatically\n");
   printf("\t-v                  - Sets log level to highest verbosity\n");
   printf("\t-l \"<loglevel>\"   - Specifies log verbosity\n");
   printf("\t   Log Levels:\n");
-  printf("\t       \"Dev\"   - Development/Debugging log messages\n");
-  printf("\t       \"Info\"  - General runtime information\n");
-  printf("\t       \"Warn\"  - Warning messages indicating non-fatal failures\n");
-  printf("\t       \"Error\" - Errors that may or may not result in a crash\n");
-  printf("\t       \"Crit\"  - Critical failures that will most likely result in a crash\n");
+  printf("\t   \"Dev\"   - Development/Debugging log messages\n");
+  printf("\t   \"Info\"  - General runtime information\n");
+  printf("\t   \"Warn\"  - Warning messages indicating non-fatal failures\n");
+  printf("\t   \"Error\" - Errors that may or may not result in a crash\n");
+  printf("\t   \"Crit\"  - Critical failures that will most likely result in a crash\n");
+  printf("\n");
 
   exit( ERR_BAD_ARGS );
 }
 
-int batchclassexport( int argc, char** argv )
+/*-----------------------------------------------------------------------------
+ * classexport
+ * This exports script text to .uc files for any package
+-----------------------------------------------------------------------------*/
+int classexport( int argc, char** argv )
 {
-  if ( argc < 2 )
+  int i = 0;
+
+  // Argument parsing
+  while (1)
   {
-    printf("batchclassexport usage:\n");
-    printf("\tlucc <gopts> batchclassexport <Package Name> <Export Path>\n\n");
-    return ERR_BAD_ARGS;
+    if ( argc == 0 || i > argc )
+    {
+    BadOpt:
+      printf("classexport usage:\n");
+      printf("\tlucc [gopts] classexport [copts] <Package Name>\n\n");
+
+      printf("Command options:\n");
+      printf("\t-p \"<ExportPath>\"   - Specifies a folder (p)ath to export to\n");
+      printf("\t-s \"<ObjectName>\"   - Specifies a {s}ingle object to export\n");
+      printf("\n");
+      return ERR_BAD_ARGS;
+    }
+
+    if ( argv[i][0] == '-' )
+    {
+      switch (argv[i][1])
+      {
+        case 'p':
+          // Get the path relative to our original working directory
+          strcpy( Path, wd );
+          strcat( Path, "/" );
+          strcat( Path, argv[++i] );
+          break;
+        case 's':
+          SingleObject = argv[++i];
+          break;
+        default:
+          Logf( LOG_WARN, "Bad option '%s'", argv[i] );
+          goto BadOpt;
+      }
+    }
+    else
+    {
+      PkgName = argv[i];
+      break;
+    }
+
+    i++;
   }
-
-  char* PkgName = argv[0];
-  char  Path[4096];
-
-  // Get the path relative to our original working directory
-  strcpy( Path, wd );
-  strcat( Path, "/");
-  strcat( Path, argv[1] );
+  
+  if ( Path[0] == '\0' )
+  {
+    // Make a folder inside of the game folder (like original UCC)
+    strcat( Path, "../" );
+    strcat( Path, PkgName );
+    strcat( Path, "/Classes" );
+  }
 
   if ( !USystem::MakeDir( Path ) )
   {
-    Logf( LOG_CRIT, "Failed to create output folder '%s'",
-          Path );
+    Logf( LOG_CRIT, "Failed to create output folder '%s'", Path );
     return ERR_BAD_PATH;
   }
   UClass* Class = UClass::StaticClass();
@@ -118,6 +163,11 @@ int batchclassexport( int argc, char** argv )
     // Why are there 'None' exports at all???
     if ( strnicmp( ObjName, "None", 4 ) != 0 )
     {
+      // Check if object matches the one we want (if needed)
+      if ( SingleObject != NULL )
+        if ( stricmp( ObjName, SingleObject ) != 0 )
+          continue;
+
       // Check class type
       const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
       if ( strnicmp( ClassName, "None", 4 ) == 0 )
@@ -139,22 +189,77 @@ int batchclassexport( int argc, char** argv )
   return 0;
 }
 
-int batchtextureexport( int argc, char** argv )
+/*-----------------------------------------------------------------------------
+ * textureexport
+ * This exports textures to image files for any package
+-----------------------------------------------------------------------------*/
+int textureexport( int argc, char** argv )
 {
-  if ( argc < 2 )
+  int i = 0;
+  bool bExportToUCCFolder = false;
+
+  // Argument parsing
+  while (1)
   {
-    printf("batchtextureexport usage:\n");
-    printf("\tlucc <gopts> batchtextureexport <Package Name> <Export Path>\n\n");
-    return ERR_BAD_ARGS;
+    if ( argc == 0 || i > argc )
+    {
+    BadOpt:
+      printf("textureexport usage:\n");
+      printf("\tlucc [gopts] textureexport [copts] <Package Name>\n\n");
+
+      printf("Command options:\n");
+      printf("\t-p \"<ExportPath>\"   - Specifies a folder (p)ath to export to\n");
+      printf("\t-s \"<ObjectName>\"   - Specifies a (s)ingle object to export\n");
+      printf("\t-c                    - Let path point to a folder UCC can see\n");
+      printf("\n");
+      return ERR_BAD_ARGS;
+    }
+
+    if ( argv[i][0] == '-' )
+    {
+      switch (argv[i][1])
+      {
+        case 'p':
+          // Get the path relative to our original working directory
+          strcpy( Path, wd );
+          strcat( Path, "/" );
+          strcat( Path, argv[++i] );
+          break;
+        case 's':
+          SingleObject = argv[++i];
+          break;
+        case 'c':
+          bExportToUCCFolder = true;
+          break;
+        default:
+          Logf( LOG_WARN, "Bad option '%s'", argv[i] );
+          goto BadOpt;
+      }
+    }
+    else
+    {
+      PkgName = argv[i];
+      break;
+    }
+
+    i++;
   }
-
-  char* PkgName = argv[0];
-  char  Path[4096];
-
-  // Get the path relative to our original working directory
-  strcpy( Path, wd );
-  strcat( Path, "/");
-  strcat( Path, argv[1] );
+  
+  if ( Path[0] == '\0' )
+  {
+    strcat( Path, "../" );
+    if ( bExportToUCCFolder )
+    {
+      // Make a folder inside of the game folder (like original UCC)
+      strcat( Path, PkgName );
+      strcat( Path, "/Textures" );
+    }
+    else
+    {
+      strcat( Path, "Textures/" );
+      strcat( Path, PkgName );
+    }
+  }
 
   if ( !USystem::MakeDir( Path ) )
   {
@@ -182,6 +287,11 @@ int batchtextureexport( int argc, char** argv )
     // Why are there 'None' exports at all???
     if ( strnicmp( ObjName, "None", 4 ) != 0 )
     {
+      // Check if object matches the one we want (if needed)
+      if ( SingleObject != NULL )
+        if ( stricmp( ObjName, SingleObject ) != 0 )
+          continue;
+
       // Check class type
       const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
       if ( strnicmp( ClassName, "Texture", 7 ) == 0 )
@@ -203,22 +313,76 @@ int batchtextureexport( int argc, char** argv )
   return 0;
 }
 
-int batchsoundexport( int argc, char** argv )
+/*-----------------------------------------------------------------------------
+ * soundexport
+ * This exports sounds to audio files for any package
+-----------------------------------------------------------------------------*/
+int soundexport( int argc, char** argv )
 {
-  if ( argc < 2 )
+  int i = 0;
+  bool bExportToUCCFolder = false;
+
+  // Argument parsing
+  while (1)
   {
-    printf("batchsoundexport usage:\n");
-    printf("\tlucc <gopts> batchsoundexport <Package Name> <Export Path>\n\n");
-    return ERR_BAD_ARGS;
+    if ( argc == 0 || i > argc )
+    {
+    BadOpt:
+      printf("soundexport usage:\n");
+      printf("\tlucc [gopts] soundexport [copts] <Package Name>\n\n");
+
+      printf("Command options:\n");
+      printf("\t-p \"<ExportPath>\"   - Specifies a folder (p)ath to export to\n");
+      printf("\t-s \"<ObjectName>\"   - Specifies a (s)ingle object to export\n");
+      printf("\t-c                    - Let path point to a folder UCC can see\n");
+      printf("\n");
+      return ERR_BAD_ARGS;
+    }
+
+    if ( argv[i][0] == '-' )
+    {
+      switch (argv[i][1])
+      {
+        case 'p':
+          // Get the path relative to our original working directory
+          strcpy( Path, wd );
+          strcat( Path, "/" );
+          strcat( Path, argv[++i] );
+          break;
+        case 's':
+          SingleObject = argv[++i];
+          break;
+        case 'c':
+          bExportToUCCFolder = true;
+          break;
+        default:
+          Logf( LOG_WARN, "Bad option '%s'", argv[i] );
+          goto BadOpt;
+      }
+    }
+    else
+    {
+      PkgName = argv[i];
+      break;
+    }
+
+    i++;
   }
-
-  char* PkgName = argv[0];
-  char  Path[4096];
-
-  // Get the path relative to our original working directory
-  strcpy( Path, wd );
-  strcat( Path, "/");
-  strcat( Path, argv[1] );
+  
+  if ( Path[0] == '\0' )
+  {
+    strcat( Path, "../" );
+    if ( bExportToUCCFolder )
+    {
+      strcat( Path, PkgName );
+      strcat( Path, "/Sounds" );
+    }
+    else
+    {
+      strcat( Path, "Sounds/" );
+      strcat( Path, PkgName );
+    }
+  }
 
   if ( !USystem::MakeDir( Path ) )
   {
@@ -246,7 +410,12 @@ int batchsoundexport( int argc, char** argv )
     // Why are there 'None' exports at all???
     if ( strnicmp( ObjName, "None", 4 ) != 0 )
     {
-      // Check class type
+      // Check if object matches the one we want (if needed)
+      if ( SingleObject != NULL )
+        if ( stricmp( ObjName, SingleObject ) != 0 )
+          continue;
+
+       // Check class type
       const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
       if ( strnicmp( ClassName, "Sound", 5 ) == 0 )
       {
@@ -266,22 +435,56 @@ int batchsoundexport( int argc, char** argv )
   return 0;
 }
 
-int batchmusicexport( int argc, char** argv )
+/*-----------------------------------------------------------------------------
+ * musicexport
+ * This exports music to their respective file formats for any package
+-----------------------------------------------------------------------------*/
+int musicexport( int argc, char** argv )
 {
-  if ( argc < 2 )
+  int i = 0;
+  bool bExportToUCCFolder = false;
+
+  // Argument parsing
+  while (1)
   {
-    printf("batchmusicexport usage:\n");
-    printf("\tlucc <gopts> batchmusicexport <Package Name> <Export Path>\n\n");
-    return ERR_BAD_ARGS;
+    if ( argc == 0 || i > argc )
+    {
+    BadOpt:
+      printf("musicexport usage:\n");
+      printf("\tlucc [gopts] musicexport [copts] <Package Name>\n\n");
+
+      printf("Command options:\n");
+      printf("\t-p \"<ExportPath>\"   - Specifies a folder (p)ath to export to\n");
+      printf("\n");
+      return ERR_BAD_ARGS;
+    }
+
+    if ( argv[i][0] == '-' )
+    {
+      switch (argv[i][1])
+      {
+        case 'p':
+          // Get the path relative to our original working directory
+          strcpy( Path, wd );
+          strcat( Path, "/" );
+          strcat( Path, argv[++i] );
+          break;
+        default:
+          Logf( LOG_WARN, "Bad option '%s'", argv[i] );
+          goto BadOpt;
+      }
+    }
+    else
+    {
+      PkgName = argv[i];
+      break;
+    }
+
+    i++;
   }
-
-  char* PkgName = argv[0];
-  char  Path[4096];
-
-  // Get the path relative to our original working directory
-  strcpy( Path, wd );
-  strcat( Path, "/");
-  strcat( Path, argv[1] );
+  
+  if ( Path[0] == '\0' )
+    strcat( Path, "../Music/" );
 
   if ( !USystem::MakeDir( Path ) )
   {
@@ -329,22 +532,63 @@ int batchmusicexport( int argc, char** argv )
   return 0;
 }
 
+/*-----------------------------------------------------------------------------
+ * levelexport
+ * This exports levels to .T3D files for any package with map data
+-----------------------------------------------------------------------------*/
 int levelexport( int argc, char** argv )
 {
-  if ( argc < 2 )
+  int i = 0;
+  bool bExportMyLevelAssets = false;
+
+  // Argument parsing
+  while (1)
   {
-    printf("levelexport usage:\n");
-    printf("\tlucc <gopts> levelexport <Package Name> <Export Path>\n\n");
-    return ERR_BAD_ARGS;
+    if ( argc == 0 || i > argc )
+    {
+    BadOpt:
+      printf("levelexport usage:\n");
+      printf("\tlucc [gopts] musicexport [copts] <Package Name>\n\n");
+
+      printf("Command options:\n");
+      printf("\t-p \"<ExportPath>\"   - Specifies a folder (p)ath to export to\n");
+      printf("\t-m                    - Exports all (m)yLevel assets as well as a t3d file\n");
+      printf("\n");
+      return ERR_BAD_ARGS;
+    }
+
+    if ( argv[i][0] == '-' )
+    {
+      switch (argv[i][1])
+      {
+        case 'p':
+          // Get the path relative to our original working directory
+          strcpy( Path, wd );
+          strcat( Path, "/" );
+          strcat( Path, argv[++i] );
+          break;
+        case 'm':
+          bExportMyLevelAssets = true;
+          break;
+        default:
+          Logf( LOG_WARN, "Bad option '%s'", argv[i] );
+          goto BadOpt;
+      }
+    }
+    else
+    {
+      PkgName = argv[i];
+      break;
+    }
+
+    i++;
   }
-
-  char* PkgName = argv[0];
-  char  Path[4096];
-
-  // Get the path relative to our original working directory
-  strcpy( Path, wd );
-  strcat( Path, "/");
-  strcat( Path, argv[1] );
+  
+  if ( Path[0] == '\0' )
+  {
+    strcat( Path, "../Maps/" );
+    strcat( Path, PkgName );
+  }
 
   if ( !USystem::MakeDir( Path ) )
   {
@@ -367,9 +611,17 @@ int levelexport( int argc, char** argv )
   ULevel* Level = (ULevel*)UObject::StaticLoadObject( Pkg, "MyLevel", ULevel::StaticClass(), NULL );
   Level->ExportToFile( Path, NULL );
 
+/*
+  if ( bExportMyLevelAssets )
+    DoFullPkgExport( Pkg, Path );
+*/
+
   return 0;
 }
 
+/*-----------------------------------------------------------------------------
+ * missingnativefields helpers
+-----------------------------------------------------------------------------*/
 const char* const CppPropNames[] =
 {
   "None",
@@ -433,6 +685,11 @@ char* GetCppArrayType( UProperty* Prop )
   return (char*)CppPropNames[ArrayProp->Inner->PropertyType];
 }
 
+/*-----------------------------------------------------------------------------
+ * missingnativefields
+ * This reports any missing properties and prints them in a way that can
+ * be pasted to C++ code
+-----------------------------------------------------------------------------*/
 int missingnativefields( int argc, char** argv )
 {
   if ( argc < 1 )
@@ -524,6 +781,10 @@ int missingnativefields( int argc, char** argv )
   return 0;  
 }
 
+/*-----------------------------------------------------------------------------
+ * GamePromptHandler
+ * This provides a menu with which to pick a game (if one was not specified)
+-----------------------------------------------------------------------------*/
 int GamePromptHandler( Array<char*>* Names )
 {
   int i;
@@ -614,10 +875,10 @@ tryAgain:
   return Choice - 1;
 }
 
-DECLARE_UCC_COMMAND( batchclassexport );
-DECLARE_UCC_COMMAND( batchtextureexport );
-DECLARE_UCC_COMMAND( batchsoundexport );
-DECLARE_UCC_COMMAND( batchmusicexport );
+DECLARE_UCC_COMMAND( classexport );
+DECLARE_UCC_COMMAND( textureexport );
+DECLARE_UCC_COMMAND( soundexport );
+DECLARE_UCC_COMMAND( musicexport );
 DECLARE_UCC_COMMAND( levelexport );
 DECLARE_UCC_COMMAND( missingnativefields );
 
@@ -628,10 +889,10 @@ CommandHandler GetCommandFunction( char* CmdName )
   #define APPEND_COMMAND( name ) \
     Commands.PushBack( &name##Command )
 
-  APPEND_COMMAND( batchclassexport );
-  APPEND_COMMAND( batchtextureexport );
-  APPEND_COMMAND( batchsoundexport );
-  APPEND_COMMAND( batchmusicexport );
+  APPEND_COMMAND( classexport );
+  APPEND_COMMAND( textureexport );
+  APPEND_COMMAND( soundexport );
+  APPEND_COMMAND( musicexport );
   APPEND_COMMAND( levelexport );
   APPEND_COMMAND( missingnativefields );
   
@@ -674,7 +935,7 @@ int main( int argc, char** argv )
   int i = 1;
   while (1)
   {
-    if ( i > argc )
+    if ( i == argc )
       break;
 
     if ( argv[i][0] == '-' )
