@@ -52,7 +52,7 @@ struct UccCommand
 void PrintHelpAndExit()
 {
   printf("Usage:\n");
-  printf("\tlucc <command> <parameters>\n\n");
+  printf("\tlucc [gopts] <command> <parameters>\n\n");
 
   printf("Commands for \"lucc\":\n");
   printf("\tlucc batchclassexport\n");
@@ -61,25 +61,36 @@ void PrintHelpAndExit()
   printf("\tlucc batchtextureexport\n");
   printf("\tlucc levelexport\n");
 
+  printf("Global options:\n");
+  printf("\t-g \"<GameName>\"   - Selects the specified game automatically\n");
+  printf("\t-v                  - Sets log level to highest verbosity\n");
+  printf("\t-l \"<loglevel>\"   - Specifies log verbosity\n");
+  printf("\t   Log Levels:\n");
+  printf("\t       \"Dev\"   - Development/Debugging log messages\n");
+  printf("\t       \"Info\"  - General runtime information\n");
+  printf("\t       \"Warn\"  - Warning messages indicating non-fatal failures\n");
+  printf("\t       \"Error\" - Errors that may or may not result in a crash\n");
+  printf("\t       \"Crit\"  - Critical failures that will most likely result in a crash\n");
+
   exit( ERR_BAD_ARGS );
 }
 
 int batchclassexport( int argc, char** argv )
 {
-  if ( argc < 4 )
+  if ( argc < 2 )
   {
     printf("batchclassexport usage:\n");
-    printf("\tlucc batchclassexport <Package Name> <Export Path>\n\n");
+    printf("\tlucc <gopts> batchclassexport <Package Name> <Export Path>\n\n");
     return ERR_BAD_ARGS;
   }
 
-  char* PkgName   = argv[2];
+  char* PkgName = argv[0];
   char  Path[4096];
 
   // Get the path relative to our original working directory
   strcpy( Path, wd );
   strcat( Path, "/");
-  strcat( Path, argv[3] );
+  strcat( Path, argv[1] );
 
   if ( !USystem::MakeDir( Path ) )
   {
@@ -130,20 +141,20 @@ int batchclassexport( int argc, char** argv )
 
 int batchtextureexport( int argc, char** argv )
 {
-  if ( argc < 4 )
+  if ( argc < 2 )
   {
     printf("batchtextureexport usage:\n");
-    printf("\tlucc batchtextureexport <Package Name> <Export Path>\n\n");
+    printf("\tlucc <gopts> batchtextureexport <Package Name> <Export Path>\n\n");
     return ERR_BAD_ARGS;
   }
 
-  char* PkgName = argv[2];
+  char* PkgName = argv[0];
   char  Path[4096];
 
   // Get the path relative to our original working directory
   strcpy( Path, wd );
   strcat( Path, "/");
-  strcat( Path, argv[3] );
+  strcat( Path, argv[1] );
 
   if ( !USystem::MakeDir( Path ) )
   {
@@ -194,20 +205,20 @@ int batchtextureexport( int argc, char** argv )
 
 int batchsoundexport( int argc, char** argv )
 {
-  if ( argc < 4 )
+  if ( argc < 2 )
   {
     printf("batchsoundexport usage:\n");
-    printf("\tlucc batchsoundexport <Package Name> <Export Path>\n\n");
+    printf("\tlucc <gopts> batchsoundexport <Package Name> <Export Path>\n\n");
     return ERR_BAD_ARGS;
   }
 
-  char* PkgName = argv[2];
+  char* PkgName = argv[0];
   char  Path[4096];
 
   // Get the path relative to our original working directory
   strcpy( Path, wd );
   strcat( Path, "/");
-  strcat( Path, argv[3] );
+  strcat( Path, argv[1] );
 
   if ( !USystem::MakeDir( Path ) )
   {
@@ -257,20 +268,20 @@ int batchsoundexport( int argc, char** argv )
 
 int batchmusicexport( int argc, char** argv )
 {
-  if ( argc < 4 )
+  if ( argc < 2 )
   {
     printf("batchmusicexport usage:\n");
-    printf("\tlucc batchmusicexport <Package Name> <Export Path>\n\n");
+    printf("\tlucc <gopts> batchmusicexport <Package Name> <Export Path>\n\n");
     return ERR_BAD_ARGS;
   }
 
-  char* PkgName = argv[2];
+  char* PkgName = argv[0];
   char  Path[4096];
 
   // Get the path relative to our original working directory
   strcpy( Path, wd );
   strcat( Path, "/");
-  strcat( Path, argv[3] );
+  strcat( Path, argv[1] );
 
   if ( !USystem::MakeDir( Path ) )
   {
@@ -320,20 +331,20 @@ int batchmusicexport( int argc, char** argv )
 
 int levelexport( int argc, char** argv )
 {
-  if ( argc < 4 )
+  if ( argc < 2 )
   {
     printf("levelexport usage:\n");
-    printf("\tlucc levelexport <Package Name> <Export Path>\n\n");
+    printf("\tlucc <gopts> levelexport <Package Name> <Export Path>\n\n");
     return ERR_BAD_ARGS;
   }
 
-  char* PkgName = argv[2];
+  char* PkgName = argv[0];
   char  Path[4096];
 
   // Get the path relative to our original working directory
   strcpy( Path, wd );
   strcat( Path, "/");
-  strcat( Path, argv[3] );
+  strcat( Path, argv[1] );
 
   if ( !USystem::MakeDir( Path ) )
   {
@@ -349,6 +360,8 @@ int levelexport( int argc, char** argv )
     Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
     return ERR_MISSING_PKG;
   }
+
+  Logf( LOG_INFO, "Running levelexport on package '%s' to '%s'", PkgName, Path );
 
   // Load level object and export
   ULevel* Level = (ULevel*)UObject::StaticLoadObject( Pkg, "MyLevel", ULevel::StaticClass(), NULL );
@@ -422,14 +435,14 @@ char* GetCppArrayType( UProperty* Prop )
 
 int missingnativefields( int argc, char** argv )
 {
-  if ( argc < 3 )
+  if ( argc < 1 )
   {
     printf("levelexport usage:\n");
     printf("\tlucc missingnativefields <Package Name>\n\n");
     return ERR_BAD_ARGS;
   }
   
-  char* PkgName = argv[2];
+  char* PkgName = argv[0];
 
   // Load package
   USystem::LogLevel = LOG_CRIT;
@@ -629,25 +642,77 @@ CommandHandler GetCommandFunction( char* CmdName )
   return NULL;
 }
 
+// kind of sloppy...
+int StrToLogLevel( char* LogLevelStr )
+{
+  if ( stricmp( LogLevelStr, "Dev" ) == 0 )
+    return LOG_DEV;
+  else if ( stricmp( LogLevelStr, "Info" ) == 0 )
+    return LOG_INFO;
+  else if ( stricmp( LogLevelStr, "Warn" ) == 0 )
+    return LOG_WARN;
+  else if ( stricmp( LogLevelStr, "Error" ) == 0 )
+    return LOG_ERR;
+  else if ( stricmp( LogLevelStr, "Crit" ) == 0 )
+    return LOG_CRIT;
+
+  return LOG_INFO;
+}
+
 int main( int argc, char** argv )
 {
   int ReturnCode = 0;
+  int LogLevel = LOG_INFO;
+  char* GameName = NULL;
+  char* CmdName = NULL;
 
   printf("======================================\n");
   printf("lucc: libunr UCC\n");
   printf("Written by Adam 'Xaleros' Smith\n");
   printf("======================================\n\n");
 
-  if ( argc < 2 )
+  int i = 1;
+  while (1)
+  {
+    if ( i > argc )
+      break;
+
+    if ( argv[i][0] == '-' )
+    {
+      switch (argv[i][1])
+      {
+        case 'g':
+          GameName = argv[++i];
+          break;
+        case 'l':
+          LogLevel = StrToLogLevel( argv[++i] );
+          break;
+        case 'v':
+          LogLevel = LOG_DEV;
+          break;
+        default:
+          PrintHelpAndExit();
+      }
+    }
+    else
+    {
+      CmdName = argv[i];
+      break;
+    }
+
+    i++;
+  }
+
+  if ( i == argc )
     PrintHelpAndExit();
 
   // Check command argument
-  CommandHandler Cmd = GetCommandFunction( argv[1] );
+  CommandHandler Cmd = GetCommandFunction( CmdName );
 
   // Check the command and run it
   if ( Cmd == NULL )
   {
-    Logf( LOG_CRIT, "Unknown command '%s'", argv[1] );
+    Logf( LOG_CRIT, "Unknown command '%s'", CmdName );
     ReturnCode = ERR_UNKNOWN_CMD;
   }
   else
@@ -656,20 +721,21 @@ int main( int argc, char** argv )
     getcwd( wd, sizeof( wd ) );
     CreateLogFile( "lucc.log" );
 
-    if ( !LibunrInit( GamePromptHandler, NULL, true ) )
+    if ( !LibunrInit( GamePromptHandler, NULL, true, GameName ) )
     {
       Logf( LOG_CRIT, "libunr init failed; exiting");
       ReturnCode = ERR_LIBUNR_INIT;
     }
     else
     {
-      ReturnCode = Cmd( argc, argv );
+      ReturnCode = Cmd( argc - i, &argv[i+1] );
       if ( ReturnCode > 0 )
         Logf( LOG_CRIT, "Command failed");
       else
         Logf( LOG_INFO, "Command completed successfully");
-      CloseLogFile();
     }
+
+    CloseLogFile();
   }
 
   return ReturnCode;
