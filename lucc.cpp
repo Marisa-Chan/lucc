@@ -172,8 +172,6 @@ int classexport( int argc, char** argv )
       const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
       if ( strnicmp( ClassName, "None", 4 ) == 0 )
       {
-        Logf( LOG_INFO, "Exporting %s.uc", ObjName );
- 
         UClass* Obj = (UClass*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
         if ( Obj == NULL )
         {
@@ -296,8 +294,6 @@ int textureexport( int argc, char** argv )
       const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
       if ( strnicmp( ClassName, "Texture", 7 ) == 0 )
       {
-        Logf( LOG_INFO, "Exporting %s.bmp", ObjName );
- 
         UTexture* Obj = (UTexture*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
         if ( Obj == NULL )
         {
@@ -419,8 +415,6 @@ int soundexport( int argc, char** argv )
       const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
       if ( strnicmp( ClassName, "Sound", 5 ) == 0 )
       {
-        Logf( LOG_INFO, "Exporting %s.wav", ObjName );
- 
         USound* Obj = (USound*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
         if ( Obj == NULL )
         {
@@ -492,7 +486,7 @@ int musicexport( int argc, char** argv )
           Path );
     return ERR_BAD_PATH;
   }
-  UClass* Class = USound::StaticClass();
+  UClass* Class = UMusic::StaticClass();
 
   // Load package
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
@@ -516,8 +510,6 @@ int musicexport( int argc, char** argv )
       const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
       if ( strnicmp( ClassName, "Music", 5 ) == 0 )
       {
-        Logf( LOG_INFO, "Exporting %s", ObjName );
- 
         UMusic* Obj = (UMusic*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
         if ( Obj == NULL )
         {
@@ -530,6 +522,161 @@ int musicexport( int argc, char** argv )
     }
   }
   return 0;
+}
+
+/*-----------------------------------------------------------------------------
+ * fullpkgexport helpers
+-----------------------------------------------------------------------------*/
+struct FAssetPath
+{
+  FHash TypeHash;
+  const char* Path;
+};
+
+static const FAssetPath AssetPaths[] = 
+{
+  {FnvHashString("None"),    "Classes"},
+  {FnvHashString("Texture"), "Textures"},
+  {FnvHashString("Sound"),   "Sounds"},
+  {FnvHashString("Music"),   "Music"},
+  {FnvHashString("LodMesh"), "Meshes"},
+};
+#define NUM_ASSET_TYPES (sizeof(AssetPaths)/sizeof(FAssetPath))
+
+inline char* CreateAssetPath( const FAssetPath& AssetPath, char* BasePath )
+{
+  static char Path[4096];
+  Path[0] = '\0';
+
+  strcat( Path, BasePath );
+  strcat( Path, "/" );
+  strcat( Path, AssetPath.Path );
+  strcat( Path, "/" );
+
+  if ( USystem::FileExists( Path ) )
+    return Path;
+
+  if ( !USystem::MakeDir( Path ) )
+  {
+    Logf( LOG_ERR, "Could not create path '%s' for full export", Path );
+    return NULL;
+  }
+  
+  return Path;
+}
+
+int DoFullPkgExport( UPackage* Pkg, char* Path )
+{
+  char* CurrentPath;
+  const char* ClassName;
+  const char* ObjName;
+  FHash ClassHash;
+  Array<FExport>* Exports = Pkg->GetExportTable();
+
+  for ( int i = 0; i < Exports->Size(); i++ )
+  {
+    FExport* Export = &(*Exports)[i];
+    ObjName = Pkg->ResolveNameFromIdx( Export->ObjectName );
+    if ( stricmp( ObjName, "None" ) == 0 )
+      continue;
+
+    CurrentPath = NULL;
+    ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
+    ClassHash = FnvHashString( ClassName );
+    for ( int j = 0; j < NUM_ASSET_TYPES; j++ )
+    {
+      if ( ClassHash == AssetPaths[j].TypeHash )
+      {
+        CurrentPath = CreateAssetPath( AssetPaths[j], Path );
+        break;
+      }
+    }
+    
+    if ( CurrentPath == NULL )
+      continue;
+
+    UObject* Obj = UObject::StaticLoadObject( Pkg, Export, NULL, NULL, true );
+    Obj->ExportToFile( CurrentPath, NULL );
+  }
+
+  return 0;
+}
+
+/*-----------------------------------------------------------------------------
+ * fullpkgexport
+ * This exports an entire package.
+ * Assets go into the following folders based on the export directory
+ * - Classes
+ * - Textures
+ * - Sounds
+ * - Music
+ * - Meshes
+-----------------------------------------------------------------------------*/
+int fullpkgexport( int argc, char** argv )
+{
+  int i = 0;
+
+  // Argument parsing
+  while (1)
+  {
+    if ( argc == 0 || i > argc )
+    {
+    BadOpt:
+      printf("classexport usage:\n");
+      printf("\tlucc [gopts] classexport [copts] <Package Name>\n\n");
+
+      printf("Command options:\n");
+      printf("\t-p \"<ExportPath>\"   - Specifies a folder (p)ath to export to\n");
+      printf("\n");
+      return ERR_BAD_ARGS;
+    }
+
+    if ( argv[i][0] == '-' )
+    {
+      switch (argv[i][1])
+      {
+        case 'p':
+          // Get the path relative to our original working directory
+          strcpy( Path, wd );
+          strcat( Path, "/" );
+          strcat( Path, argv[++i] );
+          break;
+        default:
+          Logf( LOG_WARN, "Bad option '%s'", argv[i] );
+          goto BadOpt;
+      }
+    }
+    else
+    {
+      PkgName = argv[i];
+      break;
+    }
+
+    i++;
+  }
+  
+  if ( Path[0] == '\0' )
+  {
+    // Make a folder inside of the game folder (like original UCC)
+    strcat( Path, "../" );
+    strcat( Path, PkgName );
+  }
+
+  if ( !USystem::MakeDir( Path ) )
+  {
+    Logf( LOG_CRIT, "Failed to create output folder '%s'", Path );
+    return ERR_BAD_PATH;
+  }
+
+  // Load package
+  UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
+  if ( Pkg == NULL )
+  {
+    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
+    return ERR_MISSING_PKG;
+  }
+
+  return DoFullPkgExport( Pkg, Path );
 }
 
 /*-----------------------------------------------------------------------------
@@ -601,7 +748,7 @@ int levelexport( int argc, char** argv )
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
   if ( Pkg == NULL )
   {
-    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
+    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist", PkgName );
     return ERR_MISSING_PKG;
   }
 
@@ -611,10 +758,8 @@ int levelexport( int argc, char** argv )
   ULevel* Level = (ULevel*)UObject::StaticLoadObject( Pkg, "MyLevel", ULevel::StaticClass(), NULL );
   Level->ExportToFile( Path, NULL );
 
-/*
   if ( bExportMyLevelAssets )
     DoFullPkgExport( Pkg, Path );
-*/
 
   return 0;
 }
@@ -881,6 +1026,7 @@ DECLARE_UCC_COMMAND( soundexport );
 DECLARE_UCC_COMMAND( musicexport );
 DECLARE_UCC_COMMAND( levelexport );
 DECLARE_UCC_COMMAND( missingnativefields );
+DECLARE_UCC_COMMAND( fullpkgexport );
 
 CommandHandler GetCommandFunction( char* CmdName )
 {
@@ -895,6 +1041,7 @@ CommandHandler GetCommandFunction( char* CmdName )
   APPEND_COMMAND( musicexport );
   APPEND_COMMAND( levelexport );
   APPEND_COMMAND( missingnativefields );
+  APPEND_COMMAND( fullpkgexport );
   
   for ( int i = 0; i < Commands.Size(); i++ )
     if ( stricmp( Commands[i]->Name, CmdName ) == 0 )
@@ -974,7 +1121,7 @@ int main( int argc, char** argv )
   if ( Cmd == NULL )
   {
     Logf( LOG_CRIT, "Unknown command '%s'", CmdName );
-    ReturnCode = ERR_UNKNOWN_CMD;
+    PrintHelpAndExit();
   }
   else
   {
