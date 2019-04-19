@@ -734,7 +734,8 @@ int levelexport( int argc, char** argv )
   if ( Path[0] == '\0' )
   {
     strcat( Path, "../Maps/" );
-    strcat( Path, PkgName );
+    if ( bExportMyLevelAssets )
+      strcat( Path, PkgName );
   }
 
   if ( !USystem::MakeDir( Path ) )
