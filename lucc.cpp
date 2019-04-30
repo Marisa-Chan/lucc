@@ -947,7 +947,7 @@ tryAgain:
   // Get input
   char* Result = NULL;
   while ( Result == NULL )
-    Result = fgets( InputBuffer, 3, stdin );
+    Result = fgets( InputBuffer, 4, stdin );
 
   int Choice = strtol( InputBuffer, NULL, 10 );
 
