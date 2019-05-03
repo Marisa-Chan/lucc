@@ -336,7 +336,7 @@ int textureexport( int argc, char** argv )
         Obj->ExportToFile( Path, "bmp" );
 
         if ( bDoGroupPathExport )
-          *strrchr( Path, '/' ) = '\0';
+          *strrchr( Path, DIRECTORY_SEPARATOR ) = '\0';
       }
     }
   }
@@ -487,7 +487,7 @@ int soundexport( int argc, char** argv )
         Obj->ExportToFile( Path, NULL );
 
         if ( bDoGroupPathExport )
-          *strrchr( Path, '/' ) = '\0';
+          *strrchr( Path, DIRECTORY_SEPARATOR ) = '\0';
       }
     }
   }
@@ -687,7 +687,7 @@ int DoFullPkgExport( UPackage* Pkg, char* Path, bool bUseGroupPath )
     Obj->ExportToFile( CurrentPath, NULL );
 
     if ( bDoGroupPathExport )
-      *strrchr( CurrentPath, '/' ) = '\0';
+      *strrchr( CurrentPath, DIRECTORY_SEPARATOR ) = '\0';
   }
 
   return 0;
