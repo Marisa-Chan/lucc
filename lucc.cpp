@@ -115,7 +115,7 @@ int classexport( int argc, char** argv )
           {
             strcpy( Path, wd );
             strcat( Path, "/" );
-		  }
+          }
           strcat( Path, argv[++i] );
           break;
         case 's':
@@ -200,6 +200,8 @@ int textureexport( int argc, char** argv )
 {
   int i = 0;
   bool bExportToUCCFolder = false;
+  bool bUseGroupPath = false;
+  bool bDoGroupPathExport = false;
 
   // Argument parsing
   while (1)
@@ -214,6 +216,7 @@ int textureexport( int argc, char** argv )
       printf("\t-p \"<ExportPath>\"   - Specifies a folder (p)ath to export to\n");
       printf("\t-s \"<ObjectName>\"   - Specifies a (s)ingle object to export\n");
       printf("\t-c                    - Let path point to a folder UCC can see\n");
+      printf("\t-g                    - Exports objects to folders based on Group\n");
       printf("\n");
       return ERR_BAD_ARGS;
     }
@@ -230,7 +233,7 @@ int textureexport( int argc, char** argv )
           {
             strcpy( Path, wd );
             strcat( Path, "/" );
-		  }
+          }
           strcat( Path, argv[++i] );
           break;
         case 's':
@@ -238,6 +241,9 @@ int textureexport( int argc, char** argv )
           break;
         case 'c':
           bExportToUCCFolder = true;
+          break;
+        case 'g':
+          bUseGroupPath = true;
           break;
         default:
           Logf( LOG_WARN, "Bad option '%s'", argv[i] );
@@ -311,7 +317,26 @@ int textureexport( int argc, char** argv )
           return ERR_BAD_OBJECT;
         }
         
+        if ( bUseGroupPath )
+        {
+          const char* GroupName = Pkg->ResolveNameFromObjRef( Export->Group );
+          if ( stricmp( GroupName, "None" ) != 0 )
+          {
+            bDoGroupPathExport = true;
+            strcat( Path, "/" );
+            strcat( Path, GroupName );
+            USystem::MakeDir( Path );
+          }
+          else
+          {
+            bDoGroupPathExport = false;
+          }
+        }
+
         Obj->ExportToFile( Path, "bmp" );
+
+        if ( bDoGroupPathExport )
+          *strrchr( Path, '/' ) = '\0';
       }
     }
   }
@@ -327,6 +352,8 @@ int soundexport( int argc, char** argv )
 {
   int i = 0;
   bool bExportToUCCFolder = false;
+  bool bUseGroupPath = false;
+  bool bDoGroupPathExport = false;
 
   // Argument parsing
   while (1)
@@ -341,6 +368,7 @@ int soundexport( int argc, char** argv )
       printf("\t-p \"<ExportPath>\"   - Specifies a folder (p)ath to export to\n");
       printf("\t-s \"<ObjectName>\"   - Specifies a (s)ingle object to export\n");
       printf("\t-c                    - Let path point to a folder UCC can see\n");
+      printf("\t-g                    - Exports objects to folders based on Group\n");
       printf("\n");
       return ERR_BAD_ARGS;
     }
@@ -357,7 +385,7 @@ int soundexport( int argc, char** argv )
           {
             strcpy( Path, wd );
             strcat( Path, "/" );
-		  }
+          }
           strcat( Path, argv[++i] );
           break;
         case 's':
@@ -365,6 +393,9 @@ int soundexport( int argc, char** argv )
           break;
         case 'c':
           bExportToUCCFolder = true;
+          break;
+        case 'g':
+          bUseGroupPath = true;
           break;
         default:
           Logf( LOG_WARN, "Bad option '%s'", argv[i] );
@@ -437,7 +468,26 @@ int soundexport( int argc, char** argv )
           return ERR_BAD_OBJECT;
         }
         
+        if ( bUseGroupPath )
+        {
+          const char* GroupName = Pkg->ResolveNameFromObjRef( Export->Group );
+          if ( stricmp( GroupName, "None" ) != 0 )
+          {
+            bDoGroupPathExport = true;
+            strcat( Path, "/" );
+            strcat( Path, GroupName );
+            USystem::MakeDir( Path );
+          }
+          else
+          {
+            bDoGroupPathExport = false;
+          }
+        }
+
         Obj->ExportToFile( Path, NULL );
+
+        if ( bDoGroupPathExport )
+          *strrchr( Path, '/' ) = '\0';
       }
     }
   }
@@ -480,7 +530,7 @@ int musicexport( int argc, char** argv )
           {
             strcpy( Path, wd );
             strcat( Path, "/" );
-		  }
+          }
           strcat( Path, argv[++i] );
           break;
         default:
@@ -585,8 +635,9 @@ inline char* CreateAssetPath( const FAssetPath& AssetPath, char* BasePath )
   return Path;
 }
 
-int DoFullPkgExport( UPackage* Pkg, char* Path )
+int DoFullPkgExport( UPackage* Pkg, char* Path, bool bUseGroupPath )
 {
+  bool bDoGroupPathExport = false;
   char* CurrentPath;
   const char* ClassName;
   const char* ObjName;
@@ -616,7 +667,27 @@ int DoFullPkgExport( UPackage* Pkg, char* Path )
       continue;
 
     UObject* Obj = UObject::StaticLoadObject( Pkg, Export, NULL, NULL, true );
+
+    if ( bUseGroupPath )
+    {
+      const char* GroupName = Pkg->ResolveNameFromObjRef( Export->Group );
+      if ( stricmp( GroupName, "None" ) != 0 )
+      {
+        bDoGroupPathExport = true;
+        strcat( CurrentPath, "/" );
+        strcat( CurrentPath, GroupName );
+        USystem::MakeDir( CurrentPath );
+      }
+      else
+      {
+        bDoGroupPathExport = false;
+      }
+    }
+
     Obj->ExportToFile( CurrentPath, NULL );
+
+    if ( bDoGroupPathExport )
+      *strrchr( CurrentPath, '/' ) = '\0';
   }
 
   return 0;
@@ -635,6 +706,7 @@ int DoFullPkgExport( UPackage* Pkg, char* Path )
 int fullpkgexport( int argc, char** argv )
 {
   int i = 0;
+  bool bUseGroupPath = false;
 
   // Argument parsing
   while (1)
@@ -647,6 +719,7 @@ int fullpkgexport( int argc, char** argv )
 
       printf("Command options:\n");
       printf("\t-p \"<ExportPath>\"   - Specifies a folder (p)ath to export to\n");
+      printf("\t-g                    - Exports objects to folders based on Group\n");
       printf("\n");
       return ERR_BAD_ARGS;
     }
@@ -662,8 +735,11 @@ int fullpkgexport( int argc, char** argv )
           {
             strcpy( Path, wd );
             strcat( Path, "/" );
-		  }
+          }
           strcat( Path, argv[++i] );
+          break;
+        case 'g':
+          bUseGroupPath = true;
           break;
         default:
           Logf( LOG_WARN, "Bad option '%s'", argv[i] );
@@ -700,7 +776,7 @@ int fullpkgexport( int argc, char** argv )
     return ERR_MISSING_PKG;
   }
 
-  return DoFullPkgExport( Pkg, Path );
+  return DoFullPkgExport( Pkg, Path, bUseGroupPath );
 }
 
 /*-----------------------------------------------------------------------------
@@ -740,7 +816,7 @@ int levelexport( int argc, char** argv )
           {
             strcpy( Path, wd );
             strcat( Path, "/" );
-		  }
+          }
           strcat( Path, argv[++i] );
           break;
         case 'm':
@@ -761,11 +837,10 @@ int levelexport( int argc, char** argv )
   }
   
   if ( Path[0] == '\0' )
-  {
     strcat( Path, "../Maps/" );
-    if ( bExportMyLevelAssets )
-      strcat( Path, PkgName );
-  }
+
+  if ( bExportMyLevelAssets )
+    strcat( Path, PkgName );
 
   if ( !USystem::MakeDir( Path ) )
   {
@@ -789,7 +864,7 @@ int levelexport( int argc, char** argv )
   Level->ExportToFile( Path, NULL );
 
   if ( bExportMyLevelAssets )
-    DoFullPkgExport( Pkg, Path );
+    DoFullPkgExport( Pkg, Path, false );
 
   return 0;
 }
