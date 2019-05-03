@@ -109,8 +109,13 @@ int classexport( int argc, char** argv )
       {
         case 'p':
           // Get the path relative to our original working directory
-          strcpy( Path, wd );
-          strcat( Path, "/" );
+        #ifdef _WIN32
+          if ( strchr( argv[i+1], ':' ) == NULL )
+        #endif
+          {
+            strcpy( Path, wd );
+            strcat( Path, "/" );
+		  }
           strcat( Path, argv[++i] );
           break;
         case 's':
@@ -219,8 +224,13 @@ int textureexport( int argc, char** argv )
       {
         case 'p':
           // Get the path relative to our original working directory
-          strcpy( Path, wd );
-          strcat( Path, "/" );
+        #ifdef _WIN32
+          if ( strchr( argv[i+1], ':' ) == NULL )
+        #endif
+          {
+            strcpy( Path, wd );
+            strcat( Path, "/" );
+		  }
           strcat( Path, argv[++i] );
           break;
         case 's':
@@ -341,8 +351,13 @@ int soundexport( int argc, char** argv )
       {
         case 'p':
           // Get the path relative to our original working directory
-          strcpy( Path, wd );
-          strcat( Path, "/" );
+        #ifdef _WIN32
+          if ( strchr( argv[i+1], ':' ) == NULL )
+        #endif
+          {
+            strcpy( Path, wd );
+            strcat( Path, "/" );
+		  }
           strcat( Path, argv[++i] );
           break;
         case 's':
@@ -459,8 +474,13 @@ int musicexport( int argc, char** argv )
       {
         case 'p':
           // Get the path relative to our original working directory
-          strcpy( Path, wd );
-          strcat( Path, "/" );
+        #ifdef _WIN32
+          if ( strchr( argv[i+1], ':' ) == NULL )
+        #endif
+          {
+            strcpy( Path, wd );
+            strcat( Path, "/" );
+		  }
           strcat( Path, argv[++i] );
           break;
         default:
@@ -636,9 +656,13 @@ int fullpkgexport( int argc, char** argv )
       switch (argv[i][1])
       {
         case 'p':
-          // Get the path relative to our original working directory
-          strcpy( Path, wd );
-          strcat( Path, "/" );
+        #ifdef _WIN32
+          if ( strchr( argv[i+1], ':' ) == NULL )
+        #endif
+          {
+            strcpy( Path, wd );
+            strcat( Path, "/" );
+		  }
           strcat( Path, argv[++i] );
           break;
         default:
@@ -710,8 +734,13 @@ int levelexport( int argc, char** argv )
       {
         case 'p':
           // Get the path relative to our original working directory
-          strcpy( Path, wd );
-          strcat( Path, "/" );
+        #ifdef _WIN32
+          if ( strchr( argv[i+1], ':' ) == NULL )
+        #endif
+          {
+            strcpy( Path, wd );
+            strcat( Path, "/" );
+		  }
           strcat( Path, argv[++i] );
           break;
         case 'm':
