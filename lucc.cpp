@@ -1137,7 +1137,7 @@ int main( int argc, char** argv )
     }
     else
     {
-      ReturnCode = Cmd( argc - i, &argv[i+1] );
+      ReturnCode = Cmd( argc - i - 1, &argv[i+1] );
       if ( ReturnCode > 0 )
         Logf( LOG_CRIT, "Command failed");
       else
