@@ -159,10 +159,10 @@ int classexport( int argc, char** argv )
   }
 
   // Iterate and export all class scripts
-  Array<FExport>* ExportTable = Pkg->GetExportTable();
-  for ( int i = 0; i < ExportTable->Size(); i++ )
+  Array<FExport>& ExportTable = Pkg->GetExportTable();
+  for ( int i = 0; i < ExportTable.Size(); i++ )
   {
-    FExport* Export = &(*ExportTable)[i];
+    FExport* Export = &ExportTable[i];
     const char* ObjName = Pkg->ResolveNameFromIdx( Export->ObjectName );
 
     // Why are there 'None' exports at all???
@@ -292,10 +292,10 @@ int textureexport( int argc, char** argv )
   }
 
   // Iterate and export all textures
-  Array<FExport>* ExportTable = Pkg->GetExportTable();
-  for ( int i = 0; i < ExportTable->Size(); i++ )
+  Array<FExport>& ExportTable = Pkg->GetExportTable();
+  for ( int i = 0; i < ExportTable.Size(); i++ )
   {
-    FExport* Export = &(*ExportTable)[i];
+    FExport* Export = &ExportTable[i];
     const char* ObjName = Pkg->ResolveNameFromIdx( Export->ObjectName );
 
     // Why are there 'None' exports at all???
@@ -443,10 +443,10 @@ int soundexport( int argc, char** argv )
   }
 
   // Iterate and export all sounds
-  Array<FExport>* ExportTable = Pkg->GetExportTable();
-  for ( int i = 0; i < ExportTable->Size(); i++ )
+  Array<FExport>& ExportTable = Pkg->GetExportTable();
+  for ( int i = 0; i < ExportTable.Size(); i++ )
   {
-    FExport* Export = &(*ExportTable)[i];
+    FExport* Export = &ExportTable[i];
     const char* ObjName = Pkg->ResolveNameFromIdx( Export->ObjectName );
 
     // Why are there 'None' exports at all???
@@ -567,10 +567,10 @@ int musicexport( int argc, char** argv )
   }
 
   // Iterate and export all music files
-  Array<FExport>* ExportTable = Pkg->GetExportTable();
-  for ( int i = 0; i < ExportTable->Size(); i++ )
+  Array<FExport>& ExportTable = Pkg->GetExportTable();
+  for ( int i = 0; i < ExportTable.Size(); i++ )
   {
-    FExport* Export = &(*ExportTable)[i];
+    FExport* Export = &ExportTable[i];
     const char* ObjName = Pkg->ResolveNameFromIdx( Export->ObjectName );
 
     // Why are there 'None' exports at all???
@@ -642,11 +642,11 @@ int DoFullPkgExport( UPackage* Pkg, char* Path, bool bUseGroupPath )
   const char* ClassName;
   const char* ObjName;
   FHash ClassHash;
-  Array<FExport>* Exports = Pkg->GetExportTable();
+  Array<FExport>& Exports = Pkg->GetExportTable();
 
-  for ( int i = 0; i < Exports->Size(); i++ )
+  for ( int i = 0; i < Exports.Size(); i++ )
   {
-    FExport* Export = &(*Exports)[i];
+    FExport* Export = &Exports[i];
     ObjName = Pkg->ResolveNameFromIdx( Export->ObjectName );
     if ( stricmp( ObjName, "None" ) == 0 )
       continue;
@@ -961,10 +961,10 @@ int missingnativefields( int argc, char** argv )
   }
   
   // Iterate and load all classes
-  Array<FExport>* ExportTable = Pkg->GetExportTable();
-  for ( int i = 0; i < ExportTable->Size(); i++ )
+  Array<FExport>& ExportTable = Pkg->GetExportTable();
+  for ( int i = 0; i < ExportTable.Size(); i++ )
   {
-    FExport* Export = &(*ExportTable)[i];
+    FExport* Export = &ExportTable[i];
     const char* ObjName = Pkg->ResolveNameFromIdx( Export->ObjectName );
 
     // Why are there 'None' exports at all???
@@ -1230,6 +1230,10 @@ int main( int argc, char** argv )
   }
   else
   {
+    #include <XTimer.h>
+    XTIMER_DECLARE(luccTime);
+    XTIMER_START(luccTime);
+
     // Preserve the current working directory
     getcwd( wd, sizeof( wd ) );
     CreateLogFile( "lucc.log" );
@@ -1248,6 +1252,8 @@ int main( int argc, char** argv )
         Logf( LOG_INFO, "Command completed successfully");
     }
 
+    XTIMER_END(luccTime);
+    XTIMER_PRINT(luccTime);
     CloseLogFile();
   }
 
