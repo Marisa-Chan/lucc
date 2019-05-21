@@ -11,33 +11,181 @@ lucc is a command line/terminal program. In simpler terms, this should be run
 in 'cmd.exe' or your favorite command line/terminal emulator, depending on
 which operating system you are running.
 
+The libunr runtime stores configuration info inside of libunr.ini. This file
+can be found in the same directory as the program you're running on Windows, or
+in ~/.config/libunr/libunr.ini on Linux and Unix systems. A DefaultLibunr.ini
+can be found in the same place on Windows, or in /usr/share/libunr/DefaultLibunr.ini
+on Linux and Unix systems.
+
 lucc provides a set of commands that, as well as being listed here, can be
 seen by simply running the commmand as-is without any extra arguments. A set
-of global options (which will be listed here) can also be specified 
+of global options can also be specified that affect the execution of the
+program regardless of which command is being run. Global options should be 
+specified before any command is specified. The list of global options follows
+
+  -g "<GameName>" : Selects a game from your libunr.ini based on it's name
+                    (NOTE: It is recommended to use quotes when specifying a name)
+
+  -v : Sets the log output to be as verbose as possible
+  -l "<loglevel>" : Sets the log output verbosity to something more specific
+                    <loglevel> can be one of the following
+
+      "Dev"   - Development/Debugging log messages
+      "Info"  - General runtime information
+      "Warn"  - Warnings that indicate non-fatal failures
+      "Error" - Errors that may or may not result in a crash
+      "Crit"  - Critical failures that will most likely result in a crash
+
+These global options, in addition to any options that a command can take, can
+be seen by simply running "lucc" without any arguments. To see options for
+a specific command, run the "lucc" command with only the command argument,
+such as "lucc classexport"
+
+Any packages that are specified in the command line should not have their
+file extension specified at all. Libunr will figure out where the package
+is located in the same way that UE1 does.
 
 ---------------------------------------------------------------------
   classexport
 ---------------------------------------------------------------------
+The classexport command dumps the script files for all UnrealScript classes
+in any given package. This should perform functionally the same as exporting
+all classes from a given package in the editor. 
+
+This command expects a package name at the end of the argument list. Command
+options may be given before the package name but after the specified command.
+The list of command options follows
+
+  -p "<ExportPath>"  - Specifies a folder path to export to.
+                       If this is unspecified, the export path will be
+                       {RootGameDir}/{PackageName}/Classes/
+                       (e.g. C:\UnrealGold\Engine\Classes)
+
+  -s "<ObjectName>   - Specifies a single script to export.
+                       If this is unspecified, all scripts are exported.
+
+Examples of running this command follow:
+  
+  lucc classexport Engine
+  lucc -g "UnrealGold 226" classexport UPak
+  lucc -g "UT436" classexport -p "../Botpack/Classes/" Botpack
+  lucc -g "DeusEx" classexport -s "PlayerPawn" Engine
+  lucc -g "Rune" classexport -p "../Rune/Core/Scripts" -s "Object" Core
 
 ---------------------------------------------------------------------
   textureexport
 ---------------------------------------------------------------------
+The textureexport command dumps all textures from any given package.
+At this time, only .bmp files are exported, though it is not terribly
+difficult to add support for other image formats. Fire textures are
+not exported yet, but will be dumped to an intermediate format that
+libunr powered tools could use to reimport into other packages
+
+This command expects a package name at the end of the argument list. Command
+options may be given before the package name but after the specified command.
+The list of command options follows
+
+  -p "<ExportPath>"  - Specifies a folder path to export to.
+                       If this is unspecified, the export path will be
+                       {RootGameDir}/Textures/
+                       (e.g. C:\UnrealGold\Textures)
+
+  -s "<ObjectName>   - Specifies a single script to export.
+                       If this is unspecified, all scripts are exported.
+
+  -c                   Sets the export folder to a path that is visible to UCC
+                       (e.g. C:\UnrealGold\Engine\Textures)
+
+  -g                   Exports each texture into a subfolder based on it's group
+                       (e.g. C:\UnrealGold\Textures\Ancient\Base;
+                             C:\UnrealGold\Textures\Ancient\Wall; etc..)
+
+Examples of running this command follow:
+
+  lucc textureexport Ancient
+  lucc -g "UnrealGold 226" textureexport Starship
+  lucc -g "UT436" textureexport -g -p "../Botpack/Textures" Botpack
+  lucc -g "DeusEx" textureexport -c Engine
+  lucc -g "UnrealGold 226" textureexport -c -g Skaarj
 
 ---------------------------------------------------------------------
   soundexport
 ---------------------------------------------------------------------
+The soundexport command dumps all sounds from any given package.
+This command has the same options and general behavior as textureexport
+with the exception that it exports sounds, not textures
 
 ---------------------------------------------------------------------
   musicexport
 ---------------------------------------------------------------------
+The musicexport command dumps any tracker files found in a given package.
+Traditionally, only one music object exists per music package, but lucc
+is able to handle music packages with more than one tracker embedded inside.
 
----------------------------------------------------------------------
-  fullpkgexport
----------------------------------------------------------------------
+This command expects a package name at the end of the argument list. Command
+options may be given before the package name but after the specified command.
+The list of command options follows
+
+  -p "<ExportPath>"  - Specifies a folder path to export to.
+                       If this is unspecified, the export path will be
+                       {RootGameDir}/Music/
+                       (e.g. C:\UnrealGold\Music)
+
+An example of running this command follows:
+
+  lucc -g "UnrealGold 226" musicexport -p "../Music/" SkyTwn
 
 ---------------------------------------------------------------------
   missingnativefields
 ---------------------------------------------------------------------
+The missingnativefields command prints out information about any missing
+variables from native classes in any given package. This is only useful
+for developers or debugging crashes related to missing native variables.
+
+An example of running this command follows:
+
+  lucc missingnativefields Engine
+
+---------------------------------------------------------------------
+  fullpkgexport
+---------------------------------------------------------------------
+The fullpkgexport command exports all exportable assets from any given
+package. At this time, meshes are the only class of assets that do not
+have exporters written for them.
+
+This command expects a package name at the end of the argument list. Command
+options may be given before the package name but after the specified command.
+The list of command options follows
+
+  -p "<ExportPath>"  - Specifies a folder path to export to.
+                       If this is unspecified, the export path will be
+                       {RootGameDir}/{PackageName} 
+                       (e.g. C:\UnrealGold\UnrealI)
+  
+  -g                   Exports each asset into a subfolder based on it's group
+                       (e.g. C:\UnrealGold\UnrealShare\Effects;
+                             C:\UnrealGold\UnrealShare\Titan; etc..)
 
 
+---------------------------------------------------------------------
+  levelexport
+---------------------------------------------------------------------
+The levelexport command exports Unreal Engine 1 levels to T3D format in
+the same way that the editor does.
+
+This command expects a package name at the end of the argument list. Command
+options may be given before the package name but after the specified command.
+The list of command options follows
+
+  -p "<ExportPath>"  - Specifies a folder path to export to.
+                       If this is unspecified, the export path will be
+                       {RootGameDir}/{PackageName} 
+                       (e.g. C:\UnrealGold\UnrealI)
+  
+  -m                   Exports all MyLevel content into a folder with the t3d file
+
+
+---------------------------------------------------------------------
+  The End
+---------------------------------------------------------------------
 

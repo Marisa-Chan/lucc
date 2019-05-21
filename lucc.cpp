@@ -62,6 +62,8 @@ void PrintHelpAndExit()
   printf("\tlucc musicexport\n");
   printf("\tlucc textureexport\n");
   printf("\tlucc levelexport\n");
+  printf("\tlucc missingnativefields\n");
+  printf("\tlucc fullpkgexport\n");
   printf("\n");
 
   printf("Global options:\n");
