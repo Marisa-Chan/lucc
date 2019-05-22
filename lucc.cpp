@@ -1232,10 +1232,6 @@ int main( int argc, char** argv )
   }
   else
   {
-    #include <XTimer.h>
-    XTIMER_DECLARE(luccTime);
-    XTIMER_START(luccTime);
-
     // Preserve the current working directory
     getcwd( wd, sizeof( wd ) );
     CreateLogFile( "lucc.log" );
@@ -1254,8 +1250,6 @@ int main( int argc, char** argv )
         Logf( LOG_INFO, "Command completed successfully");
     }
 
-    XTIMER_END(luccTime);
-    XTIMER_PRINT(luccTime);
     CloseLogFile();
   }
 
