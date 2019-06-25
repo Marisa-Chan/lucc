@@ -61,6 +61,7 @@ void PrintHelpAndExit()
   printf("\tlucc soundexport\n");
   printf("\tlucc musicexport\n");
   printf("\tlucc textureexport\n");
+  printf("\tlucc meshexport\n");
   printf("\tlucc levelexport\n");
   printf("\tlucc missingnativefields\n");
   printf("\tlucc fullpkgexport\n");
@@ -336,6 +337,174 @@ int textureexport( int argc, char** argv )
         }
 
         Obj->ExportToFile( Path, "bmp" );
+
+        if ( bDoGroupPathExport )
+          *strrchr( Path, DIRECTORY_SEPARATOR ) = '\0';
+      }
+    }
+  }
+
+  return 0;
+}
+
+/*-----------------------------------------------------------------------------
+ * meshexport
+ * This exports any type of mesh to a given mesh format
+-----------------------------------------------------------------------------*/
+int meshexport( int argc, char** argv )
+{
+  int i = 0;
+  bool bExportToUCCFolder = false;
+  bool bUseGroupPath = false;
+  bool bDoGroupPathExport = false;
+  char* MeshType = NULL;
+  int FrameNum = -1;
+
+  // Argument parsing
+  while (1)
+  {
+    if ( argc == 0 || i > argc )
+    {
+    BadOpt:
+      printf("meshexport usage:\n");
+      printf("\tlucc [gopts] meshexport [copts] <Package Name>\n\n");
+
+      printf("Command options:\n");
+      printf("\t-p \"<ExportPath>\"   - Specifies a folder (p)ath to export to\n");
+      printf("\t-s \"<ObjectName>\"   - Specifies a (s)ingle object to export\n");
+      printf("\t-c                    - Let path point to a folder UCC can see\n");
+      printf("\t-g                    - Exports objects to folders based on (g)roup\n");
+      printf("\t-f \"<FrameNum>\"     - Specifies a (f)rame number to export (for .obj)\n");
+      printf("\t-t \"<MeshFormat>\"   - Specifies a mesh (t)ype to export to (default to u3d)\n");
+      printf("\t   Mesh Formats:\n");
+      printf("\t   \"u3d\"  - Unreal Vertex Mesh Format (_a.3d/_d.3d)\n");
+      printf("\t   \"obj\"  - Waveform Obj Format\n");
+      printf("\n");
+      return ERR_BAD_ARGS;
+    }
+
+    if ( argv[i][0] == '-' )
+    {
+      switch (argv[i][1])
+      {
+        case 'p':
+          // Get the path relative to our original working directory
+        #ifdef _WIN32
+          if ( strchr( argv[i+1], ':' ) == NULL )
+        #endif
+          {
+            strcpy( Path, wd );
+            strcat( Path, "/" );
+          }
+          strcat( Path, argv[++i] );
+          break;
+        case 's':
+          SingleObject = argv[++i];
+          break;
+        case 'c':
+          bExportToUCCFolder = true;
+          break;
+        case 'g':
+          bUseGroupPath = true;
+          break;
+        case 'f':
+          FrameNum = strtol( argv[++i], NULL, 0 );
+          break;
+        case 't':
+          MeshType = argv[++i];
+          break;
+        default:
+          Logf( LOG_WARN, "Bad option '%s'", argv[i] );
+          goto BadOpt;
+      }
+    }
+    else
+    {
+      PkgName = argv[i];
+      break;
+    }
+
+    i++;
+  }
+  
+  if ( Path[0] == '\0' )
+  {
+    strcat( Path, "../" );
+    if ( bExportToUCCFolder )
+    {
+      // Make a folder inside of the game folder (like original UCC)
+      strcat( Path, PkgName );
+      strcat( Path, "/Meshes" );
+    }
+    else
+    {
+      strcat( Path, "Meshes/" );
+      strcat( Path, PkgName );
+    }
+  }
+
+  if ( !USystem::MakeDir( Path ) )
+  {
+    Logf( LOG_CRIT, "Failed to create output folder '%s'",
+          Path );
+    return ERR_BAD_PATH;
+  }
+  UClass* Class = UMesh::StaticClass();
+
+  // Load package
+  UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
+  if ( Pkg == NULL )
+  {
+    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
+    return ERR_MISSING_PKG;
+  }
+
+  // Iterate and export all textures
+  Array<FExport>& ExportTable = Pkg->GetExportTable();
+  for ( int i = 0; i < ExportTable.Size(); i++ )
+  {
+    FExport* Export = &ExportTable[i];
+    const char* ObjName = Pkg->ResolveNameFromIdx( Export->ObjectName );
+
+    // Why are there 'None' exports at all???
+    if ( strnicmp( ObjName, "None", 4 ) != 0 )
+    {
+      // Check if object matches the one we want (if needed)
+      if ( SingleObject != NULL )
+        if ( stricmp( ObjName, SingleObject ) != 0 )
+          continue;
+
+      // Check class type
+      const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
+      if ( strstr( ClassName, "Mesh" ) != 0 )
+      {
+        UMesh* Obj = (UMesh*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
+        if ( Obj == NULL )
+        {
+          Logf( LOG_CRIT, "Failed to load object '%s'");
+          return ERR_BAD_OBJECT;
+        }
+        
+        if ( bUseGroupPath )
+        {
+          const char* GroupName = Pkg->ResolveNameFromObjRef( Export->Group );
+          if ( stricmp( GroupName, "None" ) != 0 )
+          {
+            bDoGroupPathExport = true;
+            strcat( Path, "/" );
+            strcat( Path, GroupName );
+            USystem::MakeDir( Path );
+          }
+          else
+          {
+            bDoGroupPathExport = false;
+          }
+        }
+  
+        if ( Obj->IsA( ULodMesh::StaticClass() ) )
+          ((ULodMesh*)Obj)->ExportToFile( Path, MeshType, FrameNum );
+        else
+          Logf( LOG_WARN, "Mesh export for class '%s' not yet supported", Obj->Class->Name.Data() );
 
         if ( bDoGroupPathExport )
           *strrchr( Path, DIRECTORY_SEPARATOR ) = '\0';
@@ -716,7 +885,7 @@ int fullpkgexport( int argc, char** argv )
     if ( argc == 0 || i > argc )
     {
     BadOpt:
-      printf("classexport usage:\n");
+      printf("fullpkgexport usage:\n");
       printf("\tlucc [gopts] classexport [copts] <Package Name>\n\n");
 
       printf("Command options:\n");
@@ -1131,6 +1300,7 @@ DECLARE_UCC_COMMAND( classexport );
 DECLARE_UCC_COMMAND( textureexport );
 DECLARE_UCC_COMMAND( soundexport );
 DECLARE_UCC_COMMAND( musicexport );
+DECLARE_UCC_COMMAND( meshexport );
 DECLARE_UCC_COMMAND( levelexport );
 DECLARE_UCC_COMMAND( missingnativefields );
 DECLARE_UCC_COMMAND( fullpkgexport );
@@ -1144,6 +1314,7 @@ CommandHandler GetCommandFunction( char* CmdName )
 
   APPEND_COMMAND( classexport );
   APPEND_COMMAND( textureexport );
+  APPEND_COMMAND( meshexport );
   APPEND_COMMAND( soundexport );
   APPEND_COMMAND( musicexport );
   APPEND_COMMAND( levelexport );
@@ -1236,6 +1407,10 @@ int main( int argc, char** argv )
     getcwd( wd, sizeof( wd ) );
     CreateLogFile( "lucc.log" );
 
+#include <libxstl/XTimer.h>
+    XTIMER_DECLARE(libunr_timer);
+    XTIMER_START(libunr_timer);
+
     if ( !LibunrInit( GamePromptHandler, NULL, true, GameName ) )
     {
       Logf( LOG_CRIT, "libunr init failed; exiting");
@@ -1249,6 +1424,9 @@ int main( int argc, char** argv )
       else
         Logf( LOG_INFO, "Command completed successfully");
     }
+
+    XTIMER_END(libunr_timer);
+    XTIMER_PRINT(libunr_timer);
 
     CloseLogFile();
   }
