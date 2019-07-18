@@ -23,6 +23,7 @@
 // in UnrealScript however (and the majority of them aren't)
 //
 
+#include <unistd.h>
 #include "libunr.h"
 
 // Error codes
@@ -125,7 +126,7 @@ int classexport( int argc, char** argv )
           SingleObject = argv[++i];
           break;
         default:
-          Logf( LOG_WARN, "Bad option '%s'", argv[i] );
+          GLogf( LOG_WARN, "Bad option '%s'", argv[i] );
           goto BadOpt;
       }
     }
@@ -148,7 +149,7 @@ int classexport( int argc, char** argv )
 
   if ( !USystem::MakeDir( Path ) )
   {
-    Logf( LOG_CRIT, "Failed to create output folder '%s'", Path );
+    GLogf( LOG_CRIT, "Failed to create output folder '%s'", Path );
     return ERR_BAD_PATH;
   }
   UClass* Class = UClass::StaticClass();
@@ -157,12 +158,12 @@ int classexport( int argc, char** argv )
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
   if ( Pkg == NULL )
   {
-    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
+    GLogf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
     return ERR_MISSING_PKG;
   }
 
   // Iterate and export all class scripts
-  Array<FExport>& ExportTable = Pkg->GetExportTable();
+  TArray<FExport>& ExportTable = Pkg->GetExportTable();
   for ( int i = 0; i < ExportTable.Size(); i++ )
   {
     FExport* Export = &ExportTable[i];
@@ -183,7 +184,7 @@ int classexport( int argc, char** argv )
         UClass* Obj = (UClass*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
         if ( Obj == NULL )
         {
-          Logf( LOG_CRIT, "Failed to load object '%s'");
+          GLogf( LOG_CRIT, "Failed to load object '%s'");
           return ERR_BAD_OBJECT;
         }
         
@@ -249,7 +250,7 @@ int textureexport( int argc, char** argv )
           bUseGroupPath = true;
           break;
         default:
-          Logf( LOG_WARN, "Bad option '%s'", argv[i] );
+          GLogf( LOG_WARN, "Bad option '%s'", argv[i] );
           goto BadOpt;
       }
     }
@@ -280,7 +281,7 @@ int textureexport( int argc, char** argv )
 
   if ( !USystem::MakeDir( Path ) )
   {
-    Logf( LOG_CRIT, "Failed to create output folder '%s'",
+    GLogf( LOG_CRIT, "Failed to create output folder '%s'",
           Path );
     return ERR_BAD_PATH;
   }
@@ -290,12 +291,12 @@ int textureexport( int argc, char** argv )
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
   if ( Pkg == NULL )
   {
-    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
+    GLogf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
     return ERR_MISSING_PKG;
   }
 
   // Iterate and export all textures
-  Array<FExport>& ExportTable = Pkg->GetExportTable();
+  TArray<FExport>& ExportTable = Pkg->GetExportTable();
   for ( int i = 0; i < ExportTable.Size(); i++ )
   {
     FExport* Export = &ExportTable[i];
@@ -316,7 +317,7 @@ int textureexport( int argc, char** argv )
         UTexture* Obj = (UTexture*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
         if ( Obj == NULL )
         {
-          Logf( LOG_CRIT, "Failed to load object '%s'");
+          GLogf( LOG_CRIT, "Failed to load object '%s'");
           return ERR_BAD_OBJECT;
         }
         
@@ -414,7 +415,7 @@ int meshexport( int argc, char** argv )
           MeshType = argv[++i];
           break;
         default:
-          Logf( LOG_WARN, "Bad option '%s'", argv[i] );
+          GLogf( LOG_WARN, "Bad option '%s'", argv[i] );
           goto BadOpt;
       }
     }
@@ -445,7 +446,7 @@ int meshexport( int argc, char** argv )
 
   if ( !USystem::MakeDir( Path ) )
   {
-    Logf( LOG_CRIT, "Failed to create output folder '%s'",
+    GLogf( LOG_CRIT, "Failed to create output folder '%s'",
           Path );
     return ERR_BAD_PATH;
   }
@@ -455,12 +456,12 @@ int meshexport( int argc, char** argv )
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
   if ( Pkg == NULL )
   {
-    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
+    GLogf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
     return ERR_MISSING_PKG;
   }
 
   // Iterate and export all textures
-  Array<FExport>& ExportTable = Pkg->GetExportTable();
+  TArray<FExport>& ExportTable = Pkg->GetExportTable();
   for ( int i = 0; i < ExportTable.Size(); i++ )
   {
     FExport* Export = &ExportTable[i];
@@ -481,7 +482,7 @@ int meshexport( int argc, char** argv )
         UMesh* Obj = (UMesh*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
         if ( Obj == NULL )
         {
-          Logf( LOG_CRIT, "Failed to load object '%s'");
+          GLogf( LOG_CRIT, "Failed to load object '%s'");
           return ERR_BAD_OBJECT;
         }
         
@@ -504,7 +505,7 @@ int meshexport( int argc, char** argv )
         if ( Obj->IsA( ULodMesh::StaticClass() ) )
           ((ULodMesh*)Obj)->ExportToFile( Path, MeshType, FrameNum );
         else
-          Logf( LOG_WARN, "Mesh export for class '%s' not yet supported", Obj->Class->Name.Data() );
+          GLogf( LOG_WARN, "Mesh export for class '%s' not yet supported", Obj->Class->Name.Data() );
 
         if ( bDoGroupPathExport )
           *strrchr( Path, DIRECTORY_SEPARATOR ) = '\0';
@@ -569,7 +570,7 @@ int soundexport( int argc, char** argv )
           bUseGroupPath = true;
           break;
         default:
-          Logf( LOG_WARN, "Bad option '%s'", argv[i] );
+          GLogf( LOG_WARN, "Bad option '%s'", argv[i] );
           goto BadOpt;
       }
     }
@@ -599,7 +600,7 @@ int soundexport( int argc, char** argv )
 
   if ( !USystem::MakeDir( Path ) )
   {
-    Logf( LOG_CRIT, "Failed to create output folder '%s'",
+    GLogf( LOG_CRIT, "Failed to create output folder '%s'",
           Path );
     return ERR_BAD_PATH;
   }
@@ -609,12 +610,12 @@ int soundexport( int argc, char** argv )
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
   if ( Pkg == NULL )
   {
-    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
+    GLogf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
     return ERR_MISSING_PKG;
   }
 
   // Iterate and export all sounds
-  Array<FExport>& ExportTable = Pkg->GetExportTable();
+  TArray<FExport>& ExportTable = Pkg->GetExportTable();
   for ( int i = 0; i < ExportTable.Size(); i++ )
   {
     FExport* Export = &ExportTable[i];
@@ -635,7 +636,7 @@ int soundexport( int argc, char** argv )
         USound* Obj = (USound*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
         if ( Obj == NULL )
         {
-          Logf( LOG_CRIT, "Failed to load object '%s'");
+          GLogf( LOG_CRIT, "Failed to load object '%s'");
           return ERR_BAD_OBJECT;
         }
         
@@ -705,7 +706,7 @@ int musicexport( int argc, char** argv )
           strcat( Path, argv[++i] );
           break;
         default:
-          Logf( LOG_WARN, "Bad option '%s'", argv[i] );
+          GLogf( LOG_WARN, "Bad option '%s'", argv[i] );
           goto BadOpt;
       }
     }
@@ -723,7 +724,7 @@ int musicexport( int argc, char** argv )
 
   if ( !USystem::MakeDir( Path ) )
   {
-    Logf( LOG_CRIT, "Failed to create output folder '%s'",
+    GLogf( LOG_CRIT, "Failed to create output folder '%s'",
           Path );
     return ERR_BAD_PATH;
   }
@@ -733,12 +734,12 @@ int musicexport( int argc, char** argv )
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
   if ( Pkg == NULL )
   {
-    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
+    GLogf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
     return ERR_MISSING_PKG;
   }
 
   // Iterate and export all music files
-  Array<FExport>& ExportTable = Pkg->GetExportTable();
+  TArray<FExport>& ExportTable = Pkg->GetExportTable();
   for ( int i = 0; i < ExportTable.Size(); i++ )
   {
     FExport* Export = &ExportTable[i];
@@ -754,7 +755,7 @@ int musicexport( int argc, char** argv )
         UMusic* Obj = (UMusic*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
         if ( Obj == NULL )
         {
-          Logf( LOG_CRIT, "Failed to load object '%s'");
+          GLogf( LOG_CRIT, "Failed to load object '%s'");
           return ERR_BAD_OBJECT;
         }
         
@@ -799,7 +800,7 @@ inline char* CreateAssetPath( const FAssetPath& AssetPath, char* BasePath )
 
   if ( !USystem::MakeDir( Path ) )
   {
-    Logf( LOG_ERR, "Could not create path '%s' for full export", Path );
+    GLogf( LOG_ERR, "Could not create path '%s' for full export", Path );
     return NULL;
   }
   
@@ -813,7 +814,7 @@ int DoFullPkgExport( UPackage* Pkg, char* Path, bool bUseGroupPath )
   const char* ClassName;
   const char* ObjName;
   FHash ClassHash;
-  Array<FExport>& Exports = Pkg->GetExportTable();
+  TArray<FExport>& Exports = Pkg->GetExportTable();
 
   for ( int i = 0; i < Exports.Size(); i++ )
   {
@@ -913,7 +914,7 @@ int fullpkgexport( int argc, char** argv )
           bUseGroupPath = true;
           break;
         default:
-          Logf( LOG_WARN, "Bad option '%s'", argv[i] );
+          GLogf( LOG_WARN, "Bad option '%s'", argv[i] );
           goto BadOpt;
       }
     }
@@ -935,7 +936,7 @@ int fullpkgexport( int argc, char** argv )
 
   if ( !USystem::MakeDir( Path ) )
   {
-    Logf( LOG_CRIT, "Failed to create output folder '%s'", Path );
+    GLogf( LOG_CRIT, "Failed to create output folder '%s'", Path );
     return ERR_BAD_PATH;
   }
 
@@ -943,7 +944,7 @@ int fullpkgexport( int argc, char** argv )
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
   if ( Pkg == NULL )
   {
-    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
+    GLogf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
     return ERR_MISSING_PKG;
   }
 
@@ -994,7 +995,7 @@ int levelexport( int argc, char** argv )
           bExportMyLevelAssets = true;
           break;
         default:
-          Logf( LOG_WARN, "Bad option '%s'", argv[i] );
+          GLogf( LOG_WARN, "Bad option '%s'", argv[i] );
           goto BadOpt;
       }
     }
@@ -1015,7 +1016,7 @@ int levelexport( int argc, char** argv )
 
   if ( !USystem::MakeDir( Path ) )
   {
-    Logf( LOG_CRIT, "Failed to create output folder '%s'",
+    GLogf( LOG_CRIT, "Failed to create output folder '%s'",
           Path );
     return ERR_BAD_PATH;
   }
@@ -1024,11 +1025,11 @@ int levelexport( int argc, char** argv )
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
   if ( Pkg == NULL )
   {
-    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist", PkgName );
+    GLogf( LOG_CRIT, "Failed to open package '%s'; file does not exist", PkgName );
     return ERR_MISSING_PKG;
   }
 
-  Logf( LOG_INFO, "Running levelexport on package '%s' to '%s'", PkgName, Path );
+  GLogf( LOG_INFO, "Running levelexport on package '%s' to '%s'", PkgName, Path );
 
   // Load level object and export
   ULevel* Level = (ULevel*)UObject::StaticLoadObject( Pkg, "MyLevel", ULevel::StaticClass(), NULL );
@@ -1068,7 +1069,7 @@ char* GetCppClassName( UClass* Class )
 {
   // Not thread-safe
   static char ClassName[128] = { 0 };
-  xstl::Set( ClassName, 0, sizeof(ClassName) );
+  memset( ClassName, 0, sizeof(ClassName) );
   
   if ( Class->ClassIsA( AActor::StaticClass() ) )
     ClassName[0] = 'A';
@@ -1091,7 +1092,7 @@ char* GetCppArrayType( UProperty* Prop )
 {
   // Not thread-safe
   static char ArrayName[128] = { 0 };
-  xstl::Set( ArrayName, 0, sizeof(ArrayName) );
+  memset( ArrayName, 0, sizeof(ArrayName) );
 
   UArrayProperty* ArrayProp = (UArrayProperty*)Prop;
   if ( ArrayProp->Inner->PropertyType == PROP_Object )
@@ -1127,12 +1128,12 @@ int missingnativefields( int argc, char** argv )
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
   if ( Pkg == NULL )
   {
-    Logf( LOG_CRIT, "Failed to open package '%s'; file does not exist\n" );
+    GLogf( LOG_CRIT, "Failed to open package '%s'; file does not exist\n" );
     return ERR_MISSING_PKG;
   }
   
   // Iterate and load all classes
-  Array<FExport>& ExportTable = Pkg->GetExportTable();
+  TArray<FExport>& ExportTable = Pkg->GetExportTable();
   for ( int i = 0; i < ExportTable.Size(); i++ )
   {
     FExport* Export = &ExportTable[i];
@@ -1148,7 +1149,7 @@ int missingnativefields( int argc, char** argv )
         UClass* Class = (UClass*)UObject::StaticLoadObject( Pkg, Export, UClass::StaticClass(), NULL, true );
         if ( !Class )
         {
-          Logf( LOG_CRIT, "Failed to load object '%s'\n", ClassName );
+          GLogf( LOG_CRIT, "Failed to load object '%s'\n", ClassName );
           return ERR_BAD_OBJECT;
         }
 
@@ -1171,7 +1172,7 @@ int missingnativefields( int argc, char** argv )
             else if ( Prop->PropertyType == PROP_Object )
               printf("  %s %s", GetCppClassNameProp( Prop ), Prop->Name.Data() );
             else if ( Prop->PropertyType == PROP_Array )
-              printf("  Array<%s>* %s", GetCppArrayType( Prop ), Prop->Name.Data() );
+              printf("  TArray<%s>* %s", GetCppArrayType( Prop ), Prop->Name.Data() );
             else
               printf("  %s %s", CppPropNames[Prop->PropertyType], Prop->Name.Data() );
 
@@ -1206,7 +1207,7 @@ int missingnativefields( int argc, char** argv )
  * GamePromptHandler
  * This provides a menu with which to pick a game (if one was not specified)
 -----------------------------------------------------------------------------*/
-int GamePromptHandler( Array<char*>* Names )
+int GamePromptHandler( TArray<char*>* Names )
 {
   int i;
   char InputBuffer[4096] = { 0 };
@@ -1259,7 +1260,7 @@ tryAgain:
     GLibunrConfig->WriteString( "Game", "Name", InputBuffer, i-1 );
 
     // Get exe name
-    xstl::Set( InputBuffer, 0, sizeof( InputBuffer ) );
+    memset( InputBuffer, 0, sizeof( InputBuffer ) );
     Result = NULL;
     while ( Result == NULL )
     {
@@ -1275,7 +1276,7 @@ tryAgain:
     GLibunrConfig->WriteString( "Game", "Exec", InputBuffer, i-1 );
 
     // Get path name
-    xstl::Set( InputBuffer, 0, sizeof( InputBuffer ) );
+    memset( InputBuffer, 0, sizeof( InputBuffer ) );
     Result = NULL;
     while ( Result == NULL )
     {
@@ -1307,7 +1308,7 @@ DECLARE_UCC_COMMAND( fullpkgexport );
 
 CommandHandler GetCommandFunction( char* CmdName )
 {
-  Array<UccCommand*> Commands;
+  TArray<UccCommand*> Commands;
 
   #define APPEND_COMMAND( name ) \
     Commands.PushBack( &name##Command )
@@ -1398,37 +1399,37 @@ int main( int argc, char** argv )
   // Check the command and run it
   if ( Cmd == NULL )
   {
-    Logf( LOG_CRIT, "Unknown command '%s'", CmdName );
+    GLogf( LOG_CRIT, "Unknown command '%s'", CmdName );
     PrintHelpAndExit();
   }
   else
   {
     // Preserve the current working directory
     getcwd( wd, sizeof( wd ) );
-    CreateLogFile( "lucc.log" );
+    GLogFile = new FLogFile();
+    GLogFile->Open( "lucc.log" );
 
-#include <libxstl/XTimer.h>
-    XTIMER_DECLARE(libunr_timer);
-    XTIMER_START(libunr_timer);
+    TIMER_DECLARE(libunr_timer);
+    TIMER_START(libunr_timer);
 
     if ( !LibunrInit( GamePromptHandler, NULL, true, GameName ) )
     {
-      Logf( LOG_CRIT, "libunr init failed; exiting");
+      GLogf( LOG_CRIT, "libunr init failed; exiting");
       ReturnCode = ERR_LIBUNR_INIT;
     }
     else
     {
       ReturnCode = Cmd( argc - i - 1, &argv[i+1] );
       if ( ReturnCode > 0 )
-        Logf( LOG_CRIT, "Command failed");
+        GLogf( LOG_CRIT, "Command failed");
       else
-        Logf( LOG_INFO, "Command completed successfully");
+        GLogf( LOG_INFO, "Command completed successfully");
     }
 
-    XTIMER_END(libunr_timer);
-    XTIMER_PRINT(libunr_timer);
+    TIMER_END(libunr_timer);
+    TIMER_PRINT(libunr_timer);
 
-    CloseLogFile();
+    GLogFile->Close();
   }
 
   return ReturnCode;
