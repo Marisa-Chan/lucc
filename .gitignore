@@ -17,3 +17,5 @@ tags
 install_manifest.txt
 lucc
 *.log
+*.vcxproj.user
+runtime/

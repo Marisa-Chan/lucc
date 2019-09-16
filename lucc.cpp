@@ -23,8 +23,11 @@
 // in UnrealScript however (and the majority of them aren't)
 //
 
-#include <unistd.h>
 #include <libunr.h>
+
+#ifdef LIBUNR_WIN32
+  #include <direct.h>
+#endif
 
 // Error codes
 #define ERR_BAD_ARGS      1
@@ -1409,8 +1412,8 @@ int main( int argc, char** argv )
     GLogFile = new FLogFile();
     GLogFile->Open( "lucc.log" );
 
-    TIMER_DECLARE(libunr_timer);
-    TIMER_START(libunr_timer);
+    //TIMER_DECLARE(libunr_timer);
+    //TIMER_START(libunr_timer);
 
     if ( !LibunrInit( GamePromptHandler, NULL, true, GameName ) )
     {
@@ -1426,8 +1429,8 @@ int main( int argc, char** argv )
         GLogf( LOG_INFO, "Command completed successfully");
     }
 
-    TIMER_END(libunr_timer);
-    TIMER_PRINT(libunr_timer);
+    //TIMER_END(libunr_timer);
+    //TIMER_PRINT(libunr_timer);
 
     GLogFile->Close();
   }
