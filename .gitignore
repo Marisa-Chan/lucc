@@ -19,3 +19,5 @@ lucc
 *.log
 *.vcxproj.user
 runtime/
+x64/
+x86/
