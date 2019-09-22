@@ -71,11 +71,11 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDir)libunr\build\$(Configuration)\libunr.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)libunr\build\$(Configuration)\libunr.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StackReserveSize>4194304</StackReserveSize>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(ProjectDir)build\$(Configuration)\lucc.exe $(SolutionDir)dist\lucc.exe</Command>
+      <Command>copy $(ProjectDir)build\$(Configuration)\$(TargetName).exe $(SolutionDir)dist\$(TargetName).exe</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
