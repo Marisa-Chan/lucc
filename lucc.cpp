@@ -439,11 +439,11 @@ int meshexport( int argc, char** argv )
     {
       // Make a folder inside of the game folder (like original UCC)
       strcat( Path, PkgName );
-      strcat( Path, "/Meshes" );
+      strcat( Path, "/Models" );
     }
     else
     {
-      strcat( Path, "Meshes/" );
+      strcat( Path, "Models/" );
       strcat( Path, PkgName );
     }
   }
@@ -505,11 +505,8 @@ int meshexport( int argc, char** argv )
             bDoGroupPathExport = false;
           }
         }
-  
-        if ( Obj->IsA( ULodMesh::StaticClass() ) )
-          ((ULodMesh*)Obj)->ExportToFile( Path, MeshType, FrameNum );
-        else
-          GLogf( LOG_WARN, "Mesh export for class '%s' not yet supported", Obj->Class->Name.Data() );
+
+        Obj->ExportToFile( Path, MeshType, FrameNum );
 
         if ( bDoGroupPathExport )
           *strrchr( Path, DIRECTORY_SEPARATOR ) = '\0';
@@ -775,17 +772,17 @@ int musicexport( int argc, char** argv )
 -----------------------------------------------------------------------------*/
 struct FAssetPath
 {
-  FHash TypeHash;
+  u32 TypeHash;
   const char* Path;
 };
 
 static const FAssetPath AssetPaths[] = 
 {
-  {FnvHashString("None"),    "Classes"},
-  {FnvHashString("Texture"), "Textures"},
-  {FnvHashString("Sound"),   "Sounds"},
-  {FnvHashString("Music"),   "Music"},
-  {FnvHashString("LodMesh"), "Meshes"},
+  {SuperFastHashString("None"),    "Classes"},
+  {SuperFastHashString("Texture"), "Textures"},
+  {SuperFastHashString("Sound"),   "Sounds"},
+  {SuperFastHashString("Music"),   "Music"},
+  {SuperFastHashString("LodMesh"), "Models"},
 };
 #define NUM_ASSET_TYPES (sizeof(AssetPaths)/sizeof(FAssetPath))
 
@@ -817,7 +814,7 @@ int DoFullPkgExport( UPackage* Pkg, char* Path, bool bUseGroupPath )
   char* CurrentPath;
   const char* ClassName;
   const char* ObjName;
-  FHash ClassHash;
+  u32 ClassHash;
   TArray<FExport>& Exports = Pkg->GetExportTable();
 
   for ( int i = 0; i < Exports.Size(); i++ )
@@ -829,7 +826,7 @@ int DoFullPkgExport( UPackage* Pkg, char* Path, bool bUseGroupPath )
 
     CurrentPath = NULL;
     ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
-    ClassHash = FnvHashString( ClassName );
+    ClassHash = SuperFastHashString( ClassName );
     for ( int j = 0; j < NUM_ASSET_TYPES; j++ )
     {
       if ( ClassHash == AssetPaths[j].TypeHash )
@@ -877,7 +874,7 @@ int DoFullPkgExport( UPackage* Pkg, char* Path, bool bUseGroupPath )
  * - Textures
  * - Sounds
  * - Music
- * - Meshes
+ * - Models
 -----------------------------------------------------------------------------*/
 int fullpkgexport( int argc, char** argv )
 {
