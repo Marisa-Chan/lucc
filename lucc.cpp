@@ -71,6 +71,9 @@ void PrintHelpAndExit()
   printf("\tlucc missingnativefields\n");
   printf("\tlucc fullpkgexport\n");
   printf("\n");
+  printf("Engine level tests:\n");
+  printf("\t lucc playmusic\n");
+  printf("\n");
 
   printf("Global options:\n");
   printf("\t-g \"<GameName>\"   - Selects the specified game automatically\n");
@@ -1205,6 +1208,49 @@ int missingnativefields( int argc, char** argv )
 }
 
 /*-----------------------------------------------------------------------------
+ * playmusic
+ * This plays back music until the application is shut down with an interrupt
+-----------------------------------------------------------------------------*/
+int playmusic( int argc, char** argv )
+{
+  // Initialize engine
+  GEngine = (UEngine*)UEngine::StaticClass()->CreateObject();
+  if ( !GEngine->Init() )
+  {
+    GLogf( LOG_CRIT, "Engine init failed" );
+    return false;
+  }
+
+  // Load music package
+  char* PkgName = argv[0];
+  UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
+  if ( Pkg == NULL )
+  {
+    GLogf( LOG_CRIT, "Failed to open package '%s'; file does not exist\n" );
+    return ERR_MISSING_PKG;
+  }
+
+  // Get music
+  UMusic* Music = (UMusic*)UObject::StaticLoadObject( Pkg, Pkg->GetExport( 0 ), UMusic::StaticClass(), NULL );
+
+  // Play music
+  GEngine->Audio->PlayMusic( Music, 0, MTRAN_Instant );
+
+  // Start ticking
+  double LastTime = USystem::GetSeconds();
+  double CurrentTime = 0;
+  while ( 1 )
+  {
+    CurrentTime = USystem::GetSeconds();
+
+    double DeltaTime = CurrentTime - LastTime;
+    GEngine->Tick( DeltaTime );
+
+    LastTime = CurrentTime;
+  }
+}
+
+/*-----------------------------------------------------------------------------
  * GamePromptHandler
  * This provides a menu with which to pick a game (if one was not specified)
 -----------------------------------------------------------------------------*/
@@ -1306,6 +1352,7 @@ DECLARE_UCC_COMMAND( meshexport );
 DECLARE_UCC_COMMAND( levelexport );
 DECLARE_UCC_COMMAND( missingnativefields );
 DECLARE_UCC_COMMAND( fullpkgexport );
+DECLARE_UCC_COMMAND( playmusic );
 
 CommandHandler GetCommandFunction( char* CmdName )
 {
@@ -1322,6 +1369,7 @@ CommandHandler GetCommandFunction( char* CmdName )
   APPEND_COMMAND( levelexport );
   APPEND_COMMAND( missingnativefields );
   APPEND_COMMAND( fullpkgexport );
+  APPEND_COMMAND( playmusic );
   
   for ( int i = 0; i < Commands.Size(); i++ )
     if ( stricmp( Commands[i]->Name, CmdName ) == 0 )
