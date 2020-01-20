@@ -11,10 +11,23 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BrowsePackage.cpp" />
+    <ClCompile Include="ClassExport.cpp" />
+    <ClCompile Include="FullPkgExport.cpp" />
+    <ClCompile Include="LevelExport.cpp" />
     <ClCompile Include="lucc.cpp" />
+    <ClCompile Include="MeshExport.cpp" />
+    <ClCompile Include="MissingNativeFields.cpp" />
+    <ClCompile Include="MusicExport.cpp" />
+    <ClCompile Include="PlayMusic.cpp" />
+    <ClCompile Include="SoundExport.cpp" />
+    <ClCompile Include="TextureExport.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="lucc.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
