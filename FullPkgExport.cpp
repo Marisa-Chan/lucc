@@ -203,7 +203,7 @@ int fullpkgexport( int argc, char** argv )
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
   if ( Pkg == NULL )
   {
-    GLogf( LOG_CRIT, "Failed to open package '%s'; file does not exist" );
+    GLogf( LOG_CRIT, "Failed to open package '%s'; file does not exist", PkgName );
     return ERR_MISSING_PKG;
   }
 

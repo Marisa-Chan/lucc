@@ -28,6 +28,7 @@
 #ifdef _WIN32
   #include <direct.h>
   #include <Windows.h>
+  #undef DrawText
 #endif
 
 #include <libunr.h>
