@@ -28,6 +28,8 @@
 bool bLeftMouseHeld;
 bool bRightMouseHeld;
 
+int MouseSpeed = 10;
+
 void CameraMove( EInputKey Key, float DeltaTime, bool bKeyDown )
 {
   switch ( Key )
@@ -60,9 +62,10 @@ void CameraMouseMove( float DeltaTime, int DeltaX, int DeltaY )
       // Both buttons held: DeltaX = Camera relative Y Axis movement, DeltaY = Absolute Z Axis movement
       Y *= DeltaX;
       Y *= DeltaTime;
+      Y *= MouseSpeed;
       ViewLoc -= Y;
 
-      ViewLoc.Z += (DeltaY * DeltaTime);
+      ViewLoc.Z += (DeltaY * DeltaTime * MouseSpeed);
     }
     else
     {
@@ -70,6 +73,7 @@ void CameraMouseMove( float DeltaTime, int DeltaX, int DeltaY )
       ViewRot.Yaw += DeltaX * 10;
       X *= DeltaY;
       X *= DeltaTime;
+      X *= MouseSpeed;
       ViewLoc += X;
     }
   }
@@ -105,12 +109,15 @@ int browsepackage( int argc, char** argv )
   GEngine->Client->BindKeyInput( IK_RightMouse, CameraMove );
   GEngine->Client->BindMouseInput( CameraMouseMove );
 
-  // Load package
+  // Load packages
   UPackage* Engine = UPackage::StaticLoadPackage( "Engine" );
-  UTexture* Default = (UTexture*)UObject::StaticLoadObject( Engine, "DefaultTexture", UTexture::StaticClass(), NULL );
+  UPackage* UnrealShare = UPackage::StaticLoadPackage( "UnrealShare" );
 
   // Load medium font
   UFont* MedFont = (UFont*)UObject::StaticLoadObject( Engine, "MedFont", UFont::StaticClass(), NULL );
+
+  // Load Skaarjw mesh
+  ULodMesh* Skaarjw = (ULodMesh*)UObject::StaticLoadObject( UnrealShare, "Skaarjw", ULodMesh::StaticClass(), NULL );
 
   FBoxInt2D TextPosX( 8, 8, 256, 256 );
   FBoxInt2D TextPosY( 8, 20, 256, 256 );
@@ -122,16 +129,17 @@ int browsepackage( int argc, char** argv )
   // Cube properties
   FVector Loc( 0, 0, 0 );
   FRotator Rot( 0, 0, 0 );
-  FVector Scale( 2.0f, 2.0f, 2.0f );
+  FVector Scale( 1.0f, 1.0f, 1.0f );
 
-  GEngine->Client->CurrentViewport->Actor->Location = FVector( 0.0f, 0.0f, 0.0f );
-  GEngine->Client->CurrentViewport->Actor->Rotation = FRotator( 0, 0, 0 );
+  GEngine->Client->CurrentViewport->Actor->Location = FVector( -4.0f, 4.0f, 3.0f );
+  GEngine->Client->CurrentViewport->Actor->Rotation = FRotator( -4830, -8100, 0 );
   FVector& CameraLoc = GEngine->Client->CurrentViewport->Actor->Location;
   FRotator& CameraRot = GEngine->Client->CurrentViewport->Actor->Rotation;
 
   // Start ticking
   double LastTime = USystem::GetSeconds();
   double CurrentTime = 0;
+  double FrameNum = 0.0;
   while ( 1 )
   {
     CurrentTime = USystem::GetSeconds();
@@ -140,8 +148,12 @@ int browsepackage( int argc, char** argv )
     if ( DeltaTime <= FLT_MIN )
       DeltaTime = FLT_MIN;
 
+    FrameNum += ((1.0/30.0) * DeltaTime);
+    if ( FrameNum > 1.0 )
+      FrameNum = 0.0;
+
     // Draw cube
-    GEngine->Render->DrawCube( Loc, Rot, Scale, Default );
+    GEngine->Render->DrawMesh( Skaarjw, Skaarjw->Anims[0], FrameNum, Loc, Scale, Rot );
 
     // Camera debug
     FString CameraX = FString( "Camera.X: " ) + FString( CameraLoc.X );
