@@ -28,7 +28,7 @@
 bool bLeftMouseHeld;
 bool bRightMouseHeld;
 
-int MouseSpeed = 10;
+int MouseSpeed = 100;
 
 void CameraMove( EInputKey Key, float DeltaTime, bool bKeyDown )
 {
@@ -111,13 +111,15 @@ int browsepackage( int argc, char** argv )
 
   // Load packages
   UPackage* Engine = UPackage::StaticLoadPackage( "Engine" );
-  UPackage* UnrealShare = UPackage::StaticLoadPackage( "UnrealShare" );
+  //UPackage* UnrealShare = UPackage::StaticLoadPackage( "UnrealShare" );
 
   // Load medium font
   UFont* MedFont = (UFont*)UObject::StaticLoadObject( Engine, "MedFont", UFont::StaticClass(), NULL );
 
-  // Load Skaarjw mesh
-  ULodMesh* Skaarjw = (ULodMesh*)UObject::StaticLoadObject( UnrealShare, "Skaarjw", ULodMesh::StaticClass(), NULL );
+  // Load Dig
+  UPackage* Entry = UPackage::StaticLoadPackage( "BspTest1" );
+  ULevel* MyLevel = (ULevel*)UObject::StaticLoadObject( Entry, "MyLevel", ULevel::StaticClass(), NULL );
+  GEngine->Level = MyLevel;
 
   FBoxInt2D TextPosX( 8, 8, 256, 256 );
   FBoxInt2D TextPosY( 8, 20, 256, 256 );
@@ -151,9 +153,6 @@ int browsepackage( int argc, char** argv )
     FrameNum += ((1.0/30.0) * DeltaTime);
     if ( FrameNum > 1.0 )
       FrameNum = 0.0;
-
-    // Draw cube
-    GEngine->Render->DrawMesh( Skaarjw, Skaarjw->Anims[0], FrameNum, Loc, Scale, Rot );
 
     // Camera debug
     FString CameraX = FString( "Camera.X: " ) + FString( CameraLoc.X );
