@@ -10,7 +10,7 @@ CMakeCache.txt
 *.a
 Makefile
 *.sh
-*.cmake
+cmake_install.cmake
 build
 tags
 .gdb_history
