@@ -17,7 +17,7 @@
 \*===========================================================================*/
 
 /*========================================================================
- * BrowsePackage.cpp - Opens a viewport to browse and preview objects
+ * LevelViewer.cpp - Opens a viewport to explore a level
  *
  * written by Adam 'Xaleros' Smith
  *========================================================================
@@ -60,33 +60,59 @@ void CameraMouseMove( float DeltaTime, int DeltaX, int DeltaY )
     if ( bRightMouseHeld )
     {
       // Both buttons held: DeltaX = Camera relative Y Axis movement, DeltaY = Absolute Z Axis movement
-      Y *= DeltaX;
-      Y *= DeltaTime;
-      Y *= MouseSpeed;
-      ViewLoc -= Y;
+      Y *= (float)DeltaX;
+      Y *= (float)DeltaTime;
+      Y *= (float)MouseSpeed;
+      ViewLoc += Y;
 
       ViewLoc.Z += (DeltaY * DeltaTime * MouseSpeed);
     }
     else
     {
       // Only left mouse held: DeltaX = Yaw camera rotation, DeltaY = X Axis movement
-      ViewRot.Yaw += DeltaX * 10;
-      X *= DeltaY;
-      X *= DeltaTime;
-      X *= MouseSpeed;
+      ViewRot.Yaw -= DeltaX * 10;
+      X *= (float)DeltaY;
+      X *= (float)DeltaTime;
+      X *= (float)MouseSpeed;
       ViewLoc += X;
     }
   }
   else if ( bRightMouseHeld )
   {
     // Only right mouse held: DeltaX = Yaw camera rotation, DeltaY = Pitch camera rotation
-    ViewRot.Yaw += DeltaX * 10;
+    ViewRot.Yaw -= DeltaX * 10;
     ViewRot.Pitch += DeltaY * 10;
   }
 }
 
-int browsepackage( int argc, char** argv )
+int levelviewer( int argc, char** argv )
 {
+  // Argument parsing
+  int i = 0;
+  while ( 1 )
+  {
+    if ( argc == 0 || i > argc )
+    {
+    BadOpt:
+      printf( "level usage:\n" );
+      printf( "\tlucc [gopts] levelviewer <Package Name>\n\n" );
+      return ERR_BAD_ARGS;
+    }
+
+    if ( argv[i][0] == '-' )
+    {
+      GLogf( LOG_WARN, "Bad option '%s'", argv[i] );
+      goto BadOpt;
+    }
+    else
+    {
+      PkgName = argv[i];
+      break;
+    }
+
+    i++;
+  }
+
   // Initialize engine
   GEngine = (UEngine*)UEngine::StaticClass()->CreateObject();
   if ( !GEngine->Init() )
@@ -111,13 +137,12 @@ int browsepackage( int argc, char** argv )
 
   // Load packages
   UPackage* Engine = UPackage::StaticLoadPackage( "Engine" );
-  //UPackage* UnrealShare = UPackage::StaticLoadPackage( "UnrealShare" );
 
   // Load medium font
   UFont* MedFont = (UFont*)UObject::StaticLoadObject( Engine, "MedFont", UFont::StaticClass(), NULL );
 
-  // Load Dig
-  UPackage* Entry = UPackage::StaticLoadPackage( "BspTest1" );
+  // Load level
+  UPackage* Entry = UPackage::StaticLoadPackage( PkgName );
   ULevel* MyLevel = (ULevel*)UObject::StaticLoadObject( Entry, "MyLevel", ULevel::StaticClass(), NULL );
   GEngine->Level = MyLevel;
 
@@ -133,8 +158,8 @@ int browsepackage( int argc, char** argv )
   FRotator Rot( 0, 0, 0 );
   FVector Scale( 1.0f, 1.0f, 1.0f );
 
-  GEngine->Client->CurrentViewport->Actor->Location = FVector( -4.0f, 4.0f, 3.0f );
-  GEngine->Client->CurrentViewport->Actor->Rotation = FRotator( -4830, -8100, 0 );
+  GEngine->Client->CurrentViewport->Actor->Location = FVector( 0, 0, 0 );
+  GEngine->Client->CurrentViewport->Actor->Rotation = FRotator( 0, 0, 0 );
   FVector& CameraLoc = GEngine->Client->CurrentViewport->Actor->Location;
   FRotator& CameraRot = GEngine->Client->CurrentViewport->Actor->Rotation;
 
@@ -155,12 +180,12 @@ int browsepackage( int argc, char** argv )
       FrameNum = 0.0;
 
     // Camera debug
-    FString CameraX = FString( "Camera.X: " ) + FString( CameraLoc.X );
-    FString CameraY = FString( "Camera.Y: " ) + FString( CameraLoc.Y );
-    FString CameraZ = FString( "Camera.Z: " ) + FString( CameraLoc.Z );
-    FString CameraPitch = FString( "Camera.Pitch: " ) + FString( CameraRot.Pitch );
-    FString CameraYaw   = FString( "Camera.Yaw:   " ) + FString( CameraRot.Yaw );
-    FString CameraRoll  = FString( "Camera.Roll:  " ) + FString( CameraRot.Roll );
+    FString CameraX = "Camera.X: " + FString( CameraLoc.X );
+    FString CameraY = "Camera.Y: " + FString( CameraLoc.Y );
+    FString CameraZ = "Camera.Z: " + FString( CameraLoc.Z );
+    FString CameraPitch = "Camera.Pitch: " + FString( CameraRot.Pitch );
+    FString CameraYaw   = "Camera.Yaw:   " + FString( CameraRot.Yaw );
+    FString CameraRoll  = "Camera.Roll:  " + FString( CameraRot.Roll );
     GEngine->Render->DrawText( MedFont, TextPosX, CameraX );
     GEngine->Render->DrawText( MedFont, TextPosY, CameraY );
     GEngine->Render->DrawText( MedFont, TextPosZ, CameraZ );
@@ -169,7 +194,7 @@ int browsepackage( int argc, char** argv )
     GEngine->Render->DrawText( MedFont, TextPosRoll, CameraRoll );
 
     // Tick tock
-    GEngine->Tick( DeltaTime );
+    GEngine->Tick( (float)DeltaTime );
 
     LastTime = CurrentTime;
   }

@@ -58,7 +58,7 @@ int playmusic( int argc, char** argv )
     CurrentTime = USystem::GetSeconds();
 
     double DeltaTime = CurrentTime - LastTime;
-    GEngine->Tick( DeltaTime );
+    GEngine->Tick( (float)DeltaTime );
 
     LastTime = CurrentTime;
   }

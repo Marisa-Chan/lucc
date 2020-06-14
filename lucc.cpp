@@ -32,6 +32,17 @@
 
 #include "lucc.h"
 
+DECLARE_UCC_COMMAND( classexport );
+DECLARE_UCC_COMMAND( textureexport );
+DECLARE_UCC_COMMAND( soundexport );
+DECLARE_UCC_COMMAND( musicexport );
+DECLARE_UCC_COMMAND( meshexport );
+DECLARE_UCC_COMMAND( levelexport );
+DECLARE_UCC_COMMAND( missingnativefields );
+DECLARE_UCC_COMMAND( fullpkgexport );
+DECLARE_UCC_COMMAND( playmusic );
+DECLARE_UCC_COMMAND( levelviewer );
+
 char wd[4096]; // Working directory
 char Path[4096] = { 0 };
 char* PkgName = NULL;
@@ -53,6 +64,7 @@ void PrintHelpAndExit()
   printf("\tlucc fullpkgexport\n");
   printf("\n");
   printf("Engine level tests:\n");
+  printf("\t lucc levelviewer\n");
   printf("\t lucc playmusic\n");
   printf("\n");
 
@@ -165,17 +177,6 @@ tryAgain:
   return Choice - 1;
 }
 
-DECLARE_UCC_COMMAND( classexport );
-DECLARE_UCC_COMMAND( textureexport );
-DECLARE_UCC_COMMAND( soundexport );
-DECLARE_UCC_COMMAND( musicexport );
-DECLARE_UCC_COMMAND( meshexport );
-DECLARE_UCC_COMMAND( levelexport );
-DECLARE_UCC_COMMAND( missingnativefields );
-DECLARE_UCC_COMMAND( fullpkgexport );
-DECLARE_UCC_COMMAND( playmusic );
-DECLARE_UCC_COMMAND( browsepackage );
-
 CommandHandler GetCommandFunction( char* CmdName )
 {
   TArray<UccCommand*> Commands;
@@ -192,7 +193,7 @@ CommandHandler GetCommandFunction( char* CmdName )
   APPEND_COMMAND( missingnativefields );
   APPEND_COMMAND( fullpkgexport );
   APPEND_COMMAND( playmusic );
-  APPEND_COMMAND( browsepackage );
+  APPEND_COMMAND( levelviewer );
   
   for ( int i = 0; i < Commands.Size(); i++ )
     if ( stricmp( Commands[i]->Name, CmdName ) == 0 )
