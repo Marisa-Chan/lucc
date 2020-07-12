@@ -115,7 +115,7 @@ int DoFullPkgExport( UPackage* Pkg, char* Path, bool bUseGroupPath )
       }
     }
 
-    Obj->ExportToFile( CurrentPath, NULL );
+    UExporter::ExportObject( Obj, CurrentPath, NULL );
 
     if ( bDoGroupPathExport )
       *strrchr( CurrentPath, DIRECTORY_SEPARATOR ) = '\0';

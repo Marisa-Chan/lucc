@@ -175,7 +175,7 @@ int meshexport( int argc, char** argv )
           }
         }
 
-        Obj->ExportToFile( Path, MeshType, FrameNum );
+        UMeshExporter::ExportObject( Obj, Path, MeshType, FrameNum );
 
         if ( bDoGroupPathExport )
           *strrchr( Path, DIRECTORY_SEPARATOR ) = '\0';

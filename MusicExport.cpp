@@ -114,7 +114,7 @@ int musicexport( int argc, char** argv )
           return ERR_BAD_OBJECT;
         }
 
-        Obj->ExportToFile( Path, NULL );
+        UMusicExporter::ExportObject( Obj, Path, NULL );
       }
     }
   }

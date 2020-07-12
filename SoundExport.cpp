@@ -161,7 +161,7 @@ int soundexport( int argc, char** argv )
           }
         }
 
-        Obj->ExportToFile( Path, NULL );
+        USoundExporter::ExportObject( Obj, Path, NULL );
 
         if ( bDoGroupPathExport )
           *strrchr( Path, DIRECTORY_SEPARATOR ) = '\0';

@@ -162,7 +162,7 @@ int textureexport( int argc, char** argv )
           }
         }
 
-        Obj->ExportToFile( Path, "bmp" );
+        UTextureExporter::ExportObject( Obj, Path, "bmp" );
 
         if ( bDoGroupPathExport )
           *strrchr( Path, DIRECTORY_SEPARATOR ) = '\0';

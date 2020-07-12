@@ -105,7 +105,7 @@ int levelexport( int argc, char** argv )
 
   // Load level object and export
   ULevel* Level = (ULevel*)UObject::StaticLoadObject( Pkg, "MyLevel", ULevel::StaticClass(), NULL );
-  Level->ExportToFile( Path, NULL );
+  ULevelExporter::ExportObject( Level, Path, NULL );
 
   if ( bExportMyLevelAssets )
     DoFullPkgExport( Pkg, Path, false );
