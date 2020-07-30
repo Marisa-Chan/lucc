@@ -152,10 +152,10 @@ int meshexport( int argc, char** argv )
       const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
       if ( strstr( ClassName, "Mesh" ) != 0 )
       {
-        UMesh* Obj = (UMesh*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
+        UMesh* Obj = (UMesh*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, LOAD_Immediate );
         if ( Obj == NULL )
         {
-          GLogf( LOG_CRIT, "Failed to load object '%s'" );
+          GLogf( LOG_CRIT, "Failed to load object '%s'", ObjName );
           return ERR_BAD_OBJECT;
         }
 

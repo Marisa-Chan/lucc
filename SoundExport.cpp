@@ -138,7 +138,7 @@ int soundexport( int argc, char** argv )
       const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
       if ( strnicmp( ClassName, "Sound", 5 ) == 0 )
       {
-        USound* Obj = (USound*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
+        USound* Obj = (USound*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, LOAD_Immediate );
         if ( Obj == NULL )
         {
           GLogf( LOG_CRIT, "Failed to load object '%s'" );

@@ -41,11 +41,13 @@
 #define ERR_UNKNOWN_CMD   5
 #define ERR_LIBUNR_INIT   6
 #define ERR_BAD_PATH      7
+#define ERR_EXPORT_FAILED 8
 
 extern char wd[4096]; // Working directory
 extern char Path[4096];
 extern char* PkgName;
 extern char* SingleObject;
+extern char* ExportType;
 
 // Command handler function
 typedef int(*CommandHandler)(int, char**);

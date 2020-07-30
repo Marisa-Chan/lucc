@@ -40,6 +40,7 @@ DECLARE_UCC_COMMAND( meshexport );
 DECLARE_UCC_COMMAND( levelexport );
 DECLARE_UCC_COMMAND( missingnativefields );
 DECLARE_UCC_COMMAND( fullpkgexport );
+DECLARE_UCC_COMMAND( objectexport );
 DECLARE_UCC_COMMAND( playmusic );
 DECLARE_UCC_COMMAND( levelviewer );
 
@@ -47,6 +48,7 @@ char wd[4096]; // Working directory
 char Path[4096] = { 0 };
 char* PkgName = NULL;
 char* SingleObject = NULL;
+char* ExportType = NULL;
 
 void PrintHelpAndExit()
 {
@@ -62,6 +64,7 @@ void PrintHelpAndExit()
   printf("\tlucc levelexport\n");
   printf("\tlucc missingnativefields\n");
   printf("\tlucc fullpkgexport\n");
+  printf("\tlucc objectexport\n");
   printf("\n");
   printf("Engine level tests:\n");
   printf("\t lucc levelviewer\n");
@@ -192,6 +195,7 @@ CommandHandler GetCommandFunction( char* CmdName )
   APPEND_COMMAND( levelexport );
   APPEND_COMMAND( missingnativefields );
   APPEND_COMMAND( fullpkgexport );
+  APPEND_COMMAND( objectexport );
   APPEND_COMMAND( playmusic );
   APPEND_COMMAND( levelviewer );
   

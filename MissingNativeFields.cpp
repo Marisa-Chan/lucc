@@ -130,7 +130,7 @@ int missingnativefields( int argc, char** argv )
       const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
       if ( strnicmp( ClassName, "None", 4 ) == 0 )
       {
-        UClass* Class = (UClass*)UObject::StaticLoadObject( Pkg, Export, UClass::StaticClass(), NULL, true );
+        UClass* Class = (UClass*)UObject::StaticLoadObject( Pkg, Export, UClass::StaticClass(), NULL, LOAD_Immediate );
         if ( !Class )
         {
           GLogf( LOG_CRIT, "Failed to load object '%s'\n", ClassName );

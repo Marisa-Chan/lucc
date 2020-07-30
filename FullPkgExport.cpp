@@ -97,7 +97,7 @@ int DoFullPkgExport( UPackage* Pkg, char* Path, bool bUseGroupPath )
     if ( CurrentPath == NULL )
       continue;
 
-    UObject* Obj = UObject::StaticLoadObject( Pkg, Export, NULL, NULL, true );
+    UObject* Obj = UObject::StaticLoadObject( Pkg, Export, NULL, NULL, LOAD_Immediate );
 
     if ( bUseGroupPath )
     {

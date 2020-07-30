@@ -19,6 +19,7 @@
     <ClCompile Include="MeshExport.cpp" />
     <ClCompile Include="MissingNativeFields.cpp" />
     <ClCompile Include="MusicExport.cpp" />
+    <ClCompile Include="ObjectExport.cpp" />
     <ClCompile Include="PlayMusic.cpp" />
     <ClCompile Include="SoundExport.cpp" />
     <ClCompile Include="TextureExport.cpp" />

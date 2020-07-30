@@ -25,9 +25,10 @@
 
 #include "lucc.h"
 
-int classexport( int argc, char** argv )
+int objectexport( int argc, char** argv )
 {
   int i = 0;
+  char* ClassType = NULL;
 
   // Argument parsing
   while ( 1 )
@@ -35,13 +36,15 @@ int classexport( int argc, char** argv )
     if ( argc == 0 || i > argc )
     {
     BadOpt:
-      printf( "classexport usage:\n" );
-      printf( "\tlucc [gopts] classexport [copts] <Package Name>\n\n" );
+      printf( "objectexport usage:\n" );
+      printf( "\tlucc [gopts] objectexport [copts] <Package Name>\n\n" );
 
       printf( "Command options:\n" );
       printf( "\t-p \"<ExportPath>\"   - Specifies a folder (p)ath to export to\n" );
       printf( "\t-s \"<ObjectName>\"   - Specifies a {s}ingle object to export\n" );
-      printf( "\n" );
+      printf( "\t-t \"<ExportType>\"   - Specifies the extension type of the exported object\n" );
+      printf( "\t-c \"<ClassType>\"    - Specifies the class type of the object to export\n");
+      printf( "\n" ); 
       return ERR_BAD_ARGS;
     }
 
@@ -63,6 +66,12 @@ int classexport( int argc, char** argv )
       case 's':
         SingleObject = argv[++i];
         break;
+      case 't':
+        ExportType = argv[++i];
+        break;
+      case 'c':
+        ClassType = argv[++i];
+        break;
       default:
         GLogf( LOG_WARN, "Bad option '%s'", argv[i] );
         goto BadOpt;
@@ -77,12 +86,17 @@ int classexport( int argc, char** argv )
     i++;
   }
 
+  if ( SingleObject == NULL )
+  {
+    GLogf( LOG_CRIT, "Need to specify an object with -s" );
+    goto BadOpt;
+  }
+
   if ( Path[0] == '\0' )
   {
     // Make a folder inside of the game folder (like original UCC)
     strcat( Path, "../" );
     strcat( Path, PkgName );
-    strcat( Path, "/Classes" );
   }
 
   if ( !USystem::MakeDir( Path ) )
@@ -90,7 +104,6 @@ int classexport( int argc, char** argv )
     GLogf( LOG_CRIT, "Failed to create output folder '%s'", Path );
     return ERR_BAD_PATH;
   }
-  UClass* Class = UClass::StaticClass();
 
   // Load package
   UPackage* Pkg = UPackage::StaticLoadPackage( PkgName );
@@ -111,22 +124,31 @@ int classexport( int argc, char** argv )
     if ( strnicmp( ObjName, "None", 4 ) != 0 )
     {
       // Check if object matches the one we want (if needed)
-      if ( SingleObject != NULL )
-        if ( stricmp( ObjName, SingleObject ) != 0 )
-          continue;
+      if ( stricmp( ObjName, SingleObject ) != 0 )
+        continue;
 
       // Check class type
-      const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
-      if ( strnicmp( ClassName, "None", 4 ) == 0 )
+      UClass* Class = NULL;
+      if ( ClassType != NULL && Export->Class != 0 )
       {
-        UClass* Obj = (UClass*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, LOAD_Immediate );
-        if ( Obj == NULL )
-        {
-          GLogf( LOG_CRIT, "Failed to load object '%s'", ObjName );
-          return ERR_BAD_OBJECT;
-        }
+        Class = (UClass*)UObject::StaticLoadObject( Pkg, Export->Class, UClass::StaticClass(), NULL, LOAD_Immediate );
+        if ( stricmp( Class->Name.Data(), ClassType ) != 0 )
+          continue;
+      }
 
-        UClassExporter::ExportObject( Obj, Path, NULL );
+      // Load object
+      UObject* Obj = UObject::StaticLoadObject( Pkg, Export, NULL , NULL, LOAD_Immediate );
+      if ( !Obj )
+      {
+        GLogf( LOG_CRIT, "Failed to load object '%s.%s'\n", PkgName, ObjName );
+        return ERR_BAD_OBJECT;
+      }
+
+      // Export
+      if ( !UExporter::ExportObject( Obj, Path, ExportType ) )
+      {
+        GLogf( LOG_CRIT, "Could not export object '%s.%s'\n", PkgName, ObjName );
+        return ERR_EXPORT_FAILED;
       }
     }
   }

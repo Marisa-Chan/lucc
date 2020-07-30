@@ -139,10 +139,10 @@ int textureexport( int argc, char** argv )
       const char* ClassName = Pkg->ResolveNameFromObjRef( Export->Class );
       if ( strnicmp( ClassName, "Texture", 7 ) == 0 )
       {
-        UTexture* Obj = (UTexture*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, true );
+        UTexture* Obj = (UTexture*)UObject::StaticLoadObject( Pkg, Export, Class, NULL, LOAD_Immediate );
         if ( Obj == NULL )
         {
-          GLogf( LOG_CRIT, "Failed to load object '%s'" );
+          GLogf( LOG_CRIT, "Failed to load object '%s'", ObjName );
           return ERR_BAD_OBJECT;
         }
 
