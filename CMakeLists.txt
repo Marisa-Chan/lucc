@@ -3,9 +3,12 @@ project (LUCC CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set( CMAKE_MODULE_PATH cmake/Modules ${CMAKE_MODULE_PATH} )
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
 
-find_package(Unr REQUIRED)
+# When doing a top level build we don't want to do find_package
+if (NOT TARGET Unr::Unr)
+	find_package(Unr REQUIRED)
+endif()
 
 if ( APPLE )
 	add_definitions("-D_XOPEN_SOURCE=600")
