@@ -40,3 +40,8 @@ target_link_libraries(lucc
 	PRIVATE
 		Unr::Unr
 )
+
+install(TARGETS lucc
+	RUNTIME
+		DESTINATION bin
+)
