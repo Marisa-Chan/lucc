@@ -36,10 +36,19 @@ void CameraMove( EInputKey Key, float DeltaTime, bool bKeyDown )
   {
   case IK_LeftMouse:
     bLeftMouseHeld = bKeyDown;
-    return;
+    break;
   case IK_RightMouse:
     bRightMouseHeld = bKeyDown;
-    return;
+    break;
+  }
+
+  if ( bLeftMouseHeld || bRightMouseHeld )
+  {
+    GEngine->Client->SetMouseCapture( true );
+  }
+  else
+  {
+    GEngine->Client->SetMouseCapture( false );
   }
 }
 
@@ -122,6 +131,7 @@ int levelviewer( int argc, char** argv )
   }
 
   // Create a viewport
+  GEngine->Client->SetMouseCapture( false );
   UViewport* Viewport = GEngine->Client->OpenViewport();
   Viewport->Show();
 
